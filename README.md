@@ -387,7 +387,7 @@ INFO[0001] end command : ls                              module=command
 
 ##### Command: rm
 
-![rm](https://raw.github.com/wiki/uchimanajet7/rds-try/images/cmd_es.gif)
+![rm](https://raw.github.com/wiki/uchimanajet7/rds-try/images/cmd_rm.gif)
 
 ```ini
 [awsuser@ip-10-0-0-5 ~]$./rds-try rm -s 
