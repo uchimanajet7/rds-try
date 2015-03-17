@@ -1,0 +1,13 @@
+# toml format used
+# set rds sql queries
+# [[query]]
+# name = "select all"
+# sql = "select * from db"
+
+[[query]]
+name = "selectDB"
+sql = "USE RDSTESTDB"
+
+[[query]]
+name = "selectID"
+sql = "SELECT id FROM account"

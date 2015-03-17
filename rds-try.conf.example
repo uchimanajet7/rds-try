@@ -1,0 +1,28 @@
+# used toml format
+# https://github.com/toml-lang/toml
+
+# set aws access_key and secret_key
+[aws]
+access_key = "your AWS_ACCESS_KEY_ID"
+secret_key = "your AWS_SECRET_ACCESS_KEY"
+
+# set out put environment informations
+[out]
+root = "/home/awsuser"
+file = true
+bom = false
+
+# set log environment informations
+[log]
+root = "/home/awsuser/log"
+verbose = false
+json = true
+
+# set rds environment informations
+[rds.default]
+multi_az = false
+db_id = "your DB Instance Identifier"
+region = "your Region"
+user = "rdstestuser"
+pass = "redsmysqlpass"
+type = "db.m3.medium"
