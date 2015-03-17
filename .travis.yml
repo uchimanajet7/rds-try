@@ -1,0 +1,38 @@
+language: go
+go:
+  - 1.4.1
+env:
+  - "PATH=/home/travis/gopath/bin:$PATH"
+before_install:
+  - go get github.com/mitchellh/gox
+  - gox -build-toolchain -os="linux windows darwin"
+  - go get github.com/tcnksm/ghr
+  - go get github.com/axw/gocov/gocov
+  - go get github.com/mattn/goveralls
+  - go get golang.org/x/tools/cmd/cover
+  - go get github.com/axw/gocov/gocov
+script:
+  # cannot use test profile flag with multiple packages error
+  #- go test -v -covermode=count -coverprofile=coverage.out ./...
+  - go test -v -covermode=count -coverprofile=main.cover.out -coverpkg=./... github.com/uchimanajet7/rds-try
+  - go test -v -covermode=count -coverprofile=utils.cover.out -coverpkg=./... github.com/uchimanajet7/rds-try/utils
+  - go test -v -covermode=count -coverprofile=query.cover.out -coverpkg=./... github.com/uchimanajet7/rds-try/query
+  - go test -v -covermode=count -coverprofile=logger.cover.out -coverpkg=./... github.com/uchimanajet7/rds-try/logger
+  - go test -v -covermode=count -coverprofile=config.cover.out -coverpkg=./... github.com/uchimanajet7/rds-try/config
+  - go test -v -covermode=count -coverprofile=command.cover.out -coverpkg=./... github.com/uchimanajet7/rds-try/command
+  - echo -n "mode:" > coverage.out
+  - echo " count" >> coverage.out
+  # get error !
+  #- echo "mode: count" > coverage.out
+  - ls | grep cover.out | xargs cat | grep -v "mode:" | sort -r >> coverage.out
+  - go tool cover -func coverage.out
+  - goveralls -coverprofile=coverage.out -service travis-ci -repotoken $COVERALLS_TOKEN
+after_success:
+  - gox -output "_pkg/{{.Dir}}_{{.OS}}_{{.Arch}}/{{.Dir}}" -os="linux windows darwin"
+  - find _pkg -maxdepth 1 -mindepth 1 -type d -exec cp README.* {}/ \;
+  - find _pkg -maxdepth 1 -mindepth 1 -type d -exec cp *.example {}/ \;
+  - cd _pkg
+  - find . -maxdepth 1 -mindepth 1 -type d -exec zip -r {}.zip {}/ \;
+  - cd ..
+  - TAG=`cat _tag | awk "NR==1"`
+  - ghr --username $GITHUB_USER --token $GITHUB_TOKEN --replace $TAG _pkg/
