@@ -42,8 +42,8 @@ var log = logger.GetLogger("command")
 
 var (
 	ErrDBInstancetNotFound = errors.New("DB Instance is not found")
-	ErrSnapshotNotFound    = errors.New("DB　Snapshot is not found")
-	ErrDriverNotFound      = errors.New("DB　Driver is not found")
+	ErrSnapshotNotFound    = errors.New("DB Snapshot is not found")
+	ErrDriverNotFound      = errors.New("DB Driver is not found")
 	ErrRdsTypesNotFound    = errors.New("RDS Types is not found")
 	ErrRdsARNsNotFound     = errors.New("RDS ARN Types is not found")
 )
