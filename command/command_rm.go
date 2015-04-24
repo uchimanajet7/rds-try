@@ -72,13 +72,13 @@ func (c *RmCommand) runDetails(f *flag.FlagSet) error {
 	if err != nil {
 		return err
 	}
-	ask_flg := true
+	ask_flg := 0
 
 	// show db list
 	if len(db_list) <= 0 {
-		ask_flg = false
 		fmt.Printf("\ndb instance list not exist\n")
 	} else {
+		ask_flg++
 		fmt.Printf("\nlist of own db instance\n")
 		for i, db := range db_list {
 			fmt.Printf("  [% d] DB Instance: %s\n", i+1, *db.DBInstanceIdentifier)
@@ -97,9 +97,9 @@ func (c *RmCommand) runDetails(f *flag.FlagSet) error {
 
 		// show snapshot list
 		if len(snap_list) <= 0 {
-			ask_flg = false
 			fmt.Printf("db snapshot list not exist\n")
 		} else {
+			ask_flg++
 			fmt.Printf("list of own db snapshot\n")
 			for i, snap := range snap_list {
 				fmt.Printf("  [% d] DB Snapshot: %s\n", i+1, *snap.DBSnapshotIdentifier)
@@ -110,7 +110,7 @@ func (c *RmCommand) runDetails(f *flag.FlagSet) error {
 	}
 
 	// list does not exist
-	if !ask_flg {
+	if ask_flg <= 0 {
 		return nil
 	}
 
