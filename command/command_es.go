@@ -11,8 +11,7 @@ import (
 	"github.com/uchimanajet7/rds-try/utils"
 )
 
-var ErrDBInstancetTimeOut = errors.New("DB Instance is time out")
-
+// EsCommand struct is the *Command and OptQuery and OptType and OptSnap variable
 type EsCommand struct {
 	*Command
 	OptQuery string
@@ -20,23 +19,29 @@ type EsCommand struct {
 	OptSnap  bool
 }
 
+// ErrDBInstancetTimeOut is the "DB Instance is time out" error
+var ErrDBInstancetTimeOut = errors.New("DB Instance is time out")
+
+// Help is the show help text
 func (c *EsCommand) Help() string {
 	// to-do: removal of the fixed value
-	help_text := fmt.Sprintf("\nUsage: %s es [options]\n\n", utils.GetAppName())
-	help_text += "Options:\n"
-	help_text += "  -q, --query  specify an alternate query file\n"
-	help_text += "  -s, --snap   create snapshot before restore\n"
-	help_text += "  -t, --type   specify an alternate db instance class\n"
+	helpText := fmt.Sprintf("\nUsage: %s es [options]\n\n", utils.GetAppName())
+	helpText += "Options:\n"
+	helpText += "  -q, --query  specify an alternate query file\n"
+	helpText += "  -s, --snap   create snapshot before restore\n"
+	helpText += "  -t, --type   specify an alternate db instance class\n"
 
-	return help_text
+	return helpText
 }
 
+// Synopsis is the show short help text
 func (c *EsCommand) Synopsis() string {
 	// why ES ?
 	// execute and store = ES
 	return "restore db and get results by execute sql"
 }
 
+// Run is the start command
 func (c *EsCommand) Run(args []string) int {
 	log.Infof("start command : es")
 
@@ -71,11 +76,11 @@ func (c *EsCommand) Run(args []string) int {
 
 func (c *EsCommand) runDetails(f *flag.FlagSet) error {
 	// load query
-	query_file := query.GetDefaultPath()
+	queryFile := query.GetDefaultPath()
 	if c.OptQuery != "" {
-		query_file = c.OptQuery
+		queryFile = c.OptQuery
 	}
-	queries, err := query.LoadQuery(query_file)
+	queries, err := query.LoadQuery(queryFile)
 	if err != nil {
 		return err
 	}
@@ -84,20 +89,20 @@ func (c *EsCommand) runDetails(f *flag.FlagSet) error {
 	// option create snapshot
 	// or
 	// get latest db snap shot
-	var snap_shot *rds.DBSnapshot
+	var snapShot *rds.DBSnapshot
 	if c.OptSnap {
-		snap_shot, err = c.CreateDBSnapshot(c.RDSConfig.DBId)
+		snapShot, err = c.CreateDBSnapshot(c.RDSConfig.DBId)
 		if err != nil {
 			return err
 		}
 
 		// wait for available
-		wait_chan := c.WaitForStatusAvailable(snap_shot)
-		if !<-wait_chan {
+		waitChan := c.WaitForStatusAvailable(snapShot)
+		if !<-waitChan {
 			return ErrDBInstancetTimeOut
 		}
 	} else {
-		snap_shot, err = c.DescribeLatestDBSnapshot(c.RDSConfig.DBId)
+		snapShot, err = c.DescribeLatestDBSnapshot(c.RDSConfig.DBId)
 		if err != nil {
 			return err
 		}
@@ -105,7 +110,7 @@ func (c *EsCommand) runDetails(f *flag.FlagSet) error {
 
 	// get now active db info
 	// to-do: can not run if the running instance does not exist
-	act_db, err := c.DescribeDBInstance(c.RDSConfig.DBId)
+	actDB, err := c.DescribeDBInstance(c.RDSConfig.DBId)
 	if err != nil {
 		return err
 	}
@@ -114,67 +119,67 @@ func (c *EsCommand) runDetails(f *flag.FlagSet) error {
 	// 1. argument value
 	// 2. config file type
 	// 3. running DB Instance Class
-	rest_type := *act_db.DBInstanceClass
+	restType := *actDB.DBInstanceClass
 	if c.RDSConfig.Type != "" {
-		rest_type = c.OptType
+		restType = c.OptType
 	}
 	if c.OptType != "" {
-		rest_type = c.OptType
+		restType = c.OptType
 	}
-	rest_name := utils.GetFormatedDBDisplayName(c.RDSConfig.DBId)
-	rest_args := &RestoreDBInstanceFromDBSnapshotArgs{
-		DBInstanceClass: rest_type,
-		DBIdentifier:    rest_name,
+	restName := utils.GetFormatedDBDisplayName(c.RDSConfig.DBId)
+	restArgs := &RestoreDBInstanceFromDBSnapshotArgs{
+		DBInstanceClass: restType,
+		DBIdentifier:    restName,
 		MultiAZ:         c.RDSConfig.MultiAz,
-		Snapshot:        snap_shot,
-		Instance:        act_db,
+		Snapshot:        snapShot,
+		Instance:        actDB,
 	}
-	rest_db, err := c.RestoreDBInstanceFromDBSnapshot(rest_args)
+	restDB, err := c.RestoreDBInstanceFromDBSnapshot(restArgs)
 	if err != nil {
 		return err
 	}
-	log.Infof("%+v", *rest_args)
+	log.Infof("%+v", *restArgs)
 
 	// wait for available
-	wait_chan := c.WaitForStatusAvailable(rest_db)
-	if !<-wait_chan {
+	waitChan := c.WaitForStatusAvailable(restDB)
+	if !<-waitChan {
 		return ErrDBInstancetTimeOut
 	}
 
 	// DB is restored in the default state
 	// So, I do modify
-	rest_db, err = c.ModifyDBInstance(rest_name, act_db)
+	restDB, err = c.ModifyDBInstance(restName, actDB)
 	if err != nil {
 		return err
 	}
 
 	// wait for available
-	wait_chan = c.WaitForStatusAvailable(rest_db)
-	if !<-wait_chan {
+	waitChan = c.WaitForStatusAvailable(restDB)
+	if !<-waitChan {
 		return ErrDBInstancetTimeOut
 	}
 
 	// enable the setting by performing reboot
-	rest_db, err = c.RebootDBInstance(rest_name)
+	restDB, err = c.RebootDBInstance(restName)
 	if err != nil {
 		return err
 	}
 
 	// wait for available
-	wait_chan = c.WaitForStatusAvailable(rest_db)
-	if !<-wait_chan {
+	waitChan = c.WaitForStatusAvailable(restDB)
+	if !<-waitChan {
 		return ErrDBInstancetTimeOut
 	}
 
 	// get db info
-	rest_db, err = c.DescribeDBInstance(rest_name)
+	restDB, err = c.DescribeDBInstance(restName)
 	if err != nil {
 		return err
 	}
 
 	// setting check
 	var count = 1
-	for c.CheckPendingStatus(rest_db) {
+	for c.CheckPendingStatus(restDB) {
 		// max count
 		if count > 6 {
 			return ErrDBInstancetTimeOut
@@ -184,19 +189,19 @@ func (c *EsCommand) runDetails(f *flag.FlagSet) error {
 		log.Infof("restart %d times! because change has not been applied", count)
 
 		// once again reboot
-		rest_db, err = c.RebootDBInstance(rest_name)
+		restDB, err = c.RebootDBInstance(restName)
 		if err != nil {
 			return err
 		}
 
 		// wait for available
-		wait_chan = c.WaitForStatusAvailable(rest_db)
-		if !<-wait_chan {
+		waitChan = c.WaitForStatusAvailable(restDB)
+		if !<-waitChan {
 			return ErrDBInstancetTimeOut
 		}
 
 		// get db info
-		rest_db, err = c.DescribeDBInstance(rest_name)
+		restDB, err = c.DescribeDBInstance(restName)
 		if err != nil {
 			return err
 		}
@@ -205,8 +210,8 @@ func (c *EsCommand) runDetails(f *flag.FlagSet) error {
 	// run queries
 	times, err := c.ExecuteSQL(
 		&ExecuteSQLArgs{
-			Engine:   *rest_db.Engine,
-			Endpoint: rest_db.Endpoint,
+			Engine:   *restDB.Engine,
+			Endpoint: restDB.Endpoint,
 			Queries:  queries.Query,
 		})
 	if err != nil {
@@ -215,26 +220,26 @@ func (c *EsCommand) runDetails(f *flag.FlagSet) error {
 
 	// show total time
 	var total float64
-	total_text := "\nruntime result:\n"
+	totalText := "\nruntime result:\n"
 	for i, time := range times {
 		total += time.Seconds()
-		total_text += fmt.Sprintf("  query name   : %s\n  query runtime: %s\n\n", queries.Query[i].Name, time.String())
+		totalText += fmt.Sprintf("  query name   : %s\n  query runtime: %s\n\n", queries.Query[i].Name, time.String())
 	}
 
 	hour := int(total) / 3600
 	minute := (int(total) - hour*3600) / 60
 	second := total - float64(hour*3600) - float64(minute*60)
 
-	total_text += "--------------------------------\n"
-	time_text := fmt.Sprintf("  total runtime: %.3f sec\n", second)
+	totalText += "--------------------------------\n"
+	timeText := fmt.Sprintf("  total runtime: %.3f sec\n", second)
 	if minute > 0 {
-		time_text = fmt.Sprintf("  total runtime: %d m %.3f sec\n", minute, second)
+		timeText = fmt.Sprintf("  total runtime: %d m %.3f sec\n", minute, second)
 	}
 	if hour > 0 {
-		time_text = fmt.Sprintf("  total runtime: %d h %d m %.3f sec\n", hour, minute, second)
+		timeText = fmt.Sprintf("  total runtime: %d h %d m %.3f sec\n", hour, minute, second)
 	}
-	total_text += time_text
-	fmt.Println(total_text)
+	totalText += timeText
+	fmt.Println(totalText)
 
 	return nil
 }

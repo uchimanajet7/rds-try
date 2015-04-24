@@ -10,21 +10,25 @@ import (
 	"github.com/uchimanajet7/rds-try/utils"
 )
 
+// Queries struct have Query array variable
 type Queries struct {
 	Query []Query
 }
 
+// Query struct have Name and Sql variable
 type Query struct {
 	Name string `toml:"name"`
 	Sql  string `toml:"sql"`
 }
 
-const query_file = "rds-try.query"
+const queryFile = "rds-try.query"
 
 var log = logger.GetLogger("query")
 
+// ErrQueryNotFound is "SQL item not found in query file" error.
 var ErrQueryNotFound = errors.New("SQL item not found in query file")
 
+// LoadQuery is the contents are loaded from "rds-try.query" file.
 func LoadQuery(file string) (*Queries, error) {
 	queries := &Queries{}
 
@@ -43,6 +47,7 @@ func LoadQuery(file string) (*Queries, error) {
 	return queries, nil
 }
 
+// GetDefaultPath is return default query file path.
 func GetDefaultPath() string {
-	return path.Join(utils.GetHomeDir(), query_file)
+	return path.Join(utils.GetHomeDir(), queryFile)
 }

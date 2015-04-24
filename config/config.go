@@ -11,6 +11,7 @@ import (
 	"github.com/uchimanajet7/rds-try/utils"
 )
 
+// Config struct is Aws AWSConfig and Out OutConfig and Rds map and Log LogConfig variable
 type Config struct {
 	Aws AWSConfig
 	Out OutConfig
@@ -18,23 +19,27 @@ type Config struct {
 	Log LogConfig
 }
 
+// AWSConfig struct is Accesskey and SecretKey variable
 type AWSConfig struct {
 	Accesskey string `toml:"access_key"`
 	SecretKey string `toml:"secret_key"`
 }
 
+// OutConfig struct is Root and File and Bom variable
 type OutConfig struct {
 	Root string `toml:"root"`
 	File bool   `toml:"file"`
 	Bom  bool   `toml:"bom"`
 }
 
+// LogConfig struct is Root and Verbose and JSON variable
 type LogConfig struct {
 	Root    string `toml:"root"`
 	Verbose bool   `toml:"verbose"`
-	Json    bool   `toml:"json"`
+	JSON    bool   `toml:"json"`
 }
 
+// RDSConfig struct is MultiAz and DBId and Region and User and Pass and Type variable
 type RDSConfig struct {
 	MultiAz bool   `toml:"multi_az"`
 	DBId    string `toml:"db_id"`
@@ -44,12 +49,14 @@ type RDSConfig struct {
 	Type    string `toml:"type"`
 }
 
-const config_file = "rds-try.conf"
+const configFile = "rds-try.conf"
 
 var log = logger.GetLogger("config")
 
+// ErrRdsSectionNotFound is the config file format error
 var ErrRdsSectionNotFound = errors.New("[rds.*] section not found in file")
 
+// LoadConfig is the contents are loaded from "rds-try.conf" file.
 func LoadConfig(file string) (*Config, error) {
 	config := &Config{}
 
@@ -67,10 +74,13 @@ func LoadConfig(file string) (*Config, error) {
 	return config, nil
 }
 
+// GetDefaultPath is return default conf file path.
 func GetDefaultPath() string {
-	return path.Join(utils.GetHomeDir(), config_file)
+	return path.Join(utils.GetHomeDir(), configFile)
 }
 
+// GetAWSCreds is the call aws-sdk-go "DetectCreds"
+//
 // evaluated in the following order
 // 1. input variable
 // 2. Environment variable

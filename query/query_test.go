@@ -24,18 +24,18 @@ func TestLoadQuery(t *testing.T) {
 		queries.Query = append(queries.Query, query)
 	}
 
-	temp_file, err := ioutil.TempFile("", utils.GetAppName()+"-test")
+	tempFile, err := ioutil.TempFile("", utils.GetAppName()+"-test")
 	if err != nil {
 		t.Errorf("failed to create the temp file: %s", err.Error())
 	}
-	if err := toml.NewEncoder(temp_file).Encode(queries); err != nil {
+	if err := toml.NewEncoder(tempFile).Encode(queries); err != nil {
 		t.Errorf("failed to create the toml file: %s", err.Error())
 	}
-	temp_file.Sync()
-	temp_file.Close()
-	defer os.Remove(temp_file.Name())
+	tempFile.Sync()
+	tempFile.Close()
+	defer os.Remove(tempFile.Name())
 
-	query, err := LoadQuery(temp_file.Name())
+	query, err := LoadQuery(tempFile.Name())
 
 	if err != nil {
 		t.Errorf("query file load error: %s", err.Error())
@@ -46,7 +46,7 @@ func TestLoadQuery(t *testing.T) {
 }
 
 func TestGetDefaultPath(t *testing.T) {
-	if path.Join(utils.GetHomeDir(), query_file) != GetDefaultPath() {
+	if path.Join(utils.GetHomeDir(), queryFile) != GetDefaultPath() {
 		t.Error("default path not match")
 	}
 }

@@ -18,50 +18,50 @@ func TestLoadConfig(t *testing.T) {
 		SecretKey: "ca485e5b709eae0ceacd68b61cdb28119f13942c71bbb68066c8a3cb45185a39",
 	}
 
-	test_name := utils.GetAppName() + "-test"
-	temp_dir, _ := ioutil.TempDir("", test_name)
+	testName := utils.GetAppName() + "-test"
+	tempDir, _ := ioutil.TempDir("", testName)
 	out := OutConfig{
-		Root: temp_dir,
+		Root: tempDir,
 		File: true,
 		Bom:  true,
 	}
 
 	log := LogConfig{
-		Root:    temp_dir,
+		Root:    tempDir,
 		Verbose: true,
-		Json:    true,
+		JSON:    true,
 	}
 
 	rds := RDSConfig{
 		MultiAz: true,
-		DBId:    utils.GetFormatedDBDisplayName(test_name),
+		DBId:    utils.GetFormatedDBDisplayName(testName),
 		Region:  "us-west-2",
 		User:    "test-admin",
 		Pass:    "pass-pass",
 		Type:    "db.m3.medium",
 	}
-	rds_map := map[string]RDSConfig{
+	rdsMap := map[string]RDSConfig{
 		"default": rds,
 	}
 
 	config := &Config{
 		Aws: aws,
 		Out: out,
-		Rds: rds_map,
+		Rds: rdsMap,
 		Log: log,
 	}
-	temp_file, err := ioutil.TempFile(temp_dir, utils.GetAppName()+"-test")
+	tempFile, err := ioutil.TempFile(tempDir, utils.GetAppName()+"-test")
 	if err != nil {
 		t.Errorf("failed to create the temp file: %s", err.Error())
 	}
-	if err := toml.NewEncoder(temp_file).Encode(config); err != nil {
+	if err := toml.NewEncoder(tempFile).Encode(config); err != nil {
 		t.Errorf("failed to create the toml file: %s", err.Error())
 	}
-	temp_file.Sync()
-	temp_file.Close()
-	defer os.RemoveAll(temp_dir)
+	tempFile.Sync()
+	tempFile.Close()
+	defer os.RemoveAll(tempDir)
 
-	conf, err := LoadConfig(temp_file.Name())
+	conf, err := LoadConfig(tempFile.Name())
 	if err != nil {
 		t.Errorf("config file load error: %s", err.Error())
 	}
@@ -71,7 +71,7 @@ func TestLoadConfig(t *testing.T) {
 }
 
 func TestGetDefaultPath(t *testing.T) {
-	if path.Join(utils.GetHomeDir(), config_file) != GetDefaultPath() {
+	if path.Join(utils.GetHomeDir(), configFile) != GetDefaultPath() {
 		t.Error("default path not match")
 	}
 }

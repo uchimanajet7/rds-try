@@ -23,8 +23,8 @@ var log = logger.GetLogger("main")
 
 func showHelp() func() {
 	return func() {
-		help_text := fmt.Sprintf("\nUsage: %s [globals] <command> [options]\n\n", utils.GetAppName())
-		help_text += "Globals:\n"
+		helpText := fmt.Sprintf("\nUsage: %s [globals] <command> [options]\n\n", utils.GetAppName())
+		helpText += "Globals:\n"
 
 		globals := make(map[string]string)
 
@@ -45,27 +45,27 @@ func showHelp() func() {
 
 		// to store the keys in slice in sorted order
 		var keys []string
-		text_len := 0
+		textLength := 0
 		for k, v := range globals {
 			keys = append(keys, k)
 
-			if len(v) > text_len {
-				text_len = len(v)
+			if len(v) > textLength {
+				textLength = len(v)
 			}
 		}
 		sort.Strings(keys)
 
 		// to prepare the output format
 		for _, k := range keys {
-			opt_text := fmt.Sprintf("%s%s", globals[k], strings.Repeat(" ", text_len-len(globals[k])))
-			help_text += fmt.Sprintf("  %s  %s\n", opt_text, k)
+			optionText := fmt.Sprintf("%s%s", globals[k], strings.Repeat(" ", textLength-len(globals[k])))
+			helpText += fmt.Sprintf("  %s  %s\n", optionText, k)
 		}
 
-		help_text += "\nCommands:\n"
+		helpText += "\nCommands:\n"
 
 		// make commad list
 		// to-do: want to change the "command name" that has been hard-coded
-		command_list := map[string]command.CmdInterface{
+		commandList := map[string]command.CmdInterface{
 			"es": &command.EsCommand{},
 			"ls": &command.LsCommand{},
 			"rm": &command.RmCommand{},
@@ -73,59 +73,59 @@ func showHelp() func() {
 
 		// to store the keys in slice in sorted order
 		keys = nil
-		text_len = 0
-		for k := range command_list {
+		textLength = 0
+		for k := range commandList {
 			keys = append(keys, k)
 
-			if len(k) > text_len {
-				text_len = len(k)
+			if len(k) > textLength {
+				textLength = len(k)
 			}
 		}
 		sort.Strings(keys)
 
 		// to prepare the output format
 		for _, k := range keys {
-			cmd_text := fmt.Sprintf("%s%s", k, strings.Repeat(" ", text_len-len(k)))
-			help_text += fmt.Sprintf("  %s  %s\n", cmd_text, command_list[k].Synopsis())
+			commandText := fmt.Sprintf("%s%s", k, strings.Repeat(" ", textLength-len(k)))
+			helpText += fmt.Sprintf("  %s  %s\n", commandText, commandList[k].Synopsis())
 		}
 
-		help_text += "\nOptions:\n"
-		help_text += "  show commands options help <command> -h, --help\n"
+		helpText += "\nOptions:\n"
+		helpText += "  show commands options help <command> -h, --help\n"
 
 		// show a help string
-		fmt.Println(help_text)
+		fmt.Println(helpText)
 	}
 }
 
 var (
-	help_flag    bool
-	version_flag bool
-	config_flag  string
-	name_flag    string
+	helpFlag    bool
+	versionFlag bool
+	configFlag  string
+	nameFlag    string
 )
 
 func resolveArgs() (*config.Config, int) {
 	// register flag name
-	flag.BoolVar(&help_flag, "help", false, "show this help message and exit")
-	flag.BoolVar(&help_flag, "h", false, "show this help message and exit")
-	flag.BoolVar(&version_flag, "version", false, "show version message and exit")
-	flag.BoolVar(&version_flag, "v", false, "show version message and exit")
-	flag.StringVar(&config_flag, "config", "", "specify an alternate config file")
-	flag.StringVar(&config_flag, "c", "", "specify an alternate config file")
-	flag.StringVar(&name_flag, "name", "default", "specify an alternate rds environment name")
-	flag.StringVar(&name_flag, "n", "default", "specify an alternate rds environment name")
+	flag.BoolVar(&helpFlag, "help", false, "show this help message and exit")
+	flag.BoolVar(&helpFlag, "h", false, "show this help message and exit")
+	flag.BoolVar(&versionFlag, "version", false, "show version message and exit")
+	flag.BoolVar(&versionFlag, "v", false, "show version message and exit")
+	flag.StringVar(&configFlag, "config", "", "specify an alternate config file")
+	flag.StringVar(&configFlag, "c", "", "specify an alternate config file")
+	flag.StringVar(&nameFlag, "name", "default", "specify an alternate rds environment name")
+	flag.StringVar(&nameFlag, "n", "default", "specify an alternate rds environment name")
 
 	// set help func
 	flag.Usage = showHelp()
 	flag.Parse()
 
 	// show help
-	if help_flag {
+	if helpFlag {
 		flag.Usage()
 		return nil, 0
 	}
 	// show version
-	if version_flag {
+	if versionFlag {
 		fmt.Printf("%s %s\n", utils.GetAppName(), utils.GetAppVersion())
 		return nil, 0
 	}
@@ -137,11 +137,11 @@ func resolveArgs() (*config.Config, int) {
 	}
 
 	// load config file
-	conf_file := config.GetDefaultPath()
-	if config_flag != "" {
-		conf_file = config_flag
+	configFile := config.GetDefaultPath()
+	if configFlag != "" {
+		configFile = configFlag
 	}
-	conf, err := config.LoadConfig(conf_file)
+	conf, err := config.LoadConfig(configFile)
 	if err != nil {
 		return nil, 1
 	}
@@ -156,43 +156,43 @@ func setLogOptions(conf *config.Config) (*os.File, int) {
 	if conf.Log.Verbose {
 		log.SetLogLevelDebug()
 	}
-	if conf.Log.Json {
-		log.SetJsonLogFormat()
+	if conf.Log.JSON {
+		log.SetJSONLogFormat()
 	}
-	log_root := utils.GetHomeDir()
+	logRoot := utils.GetHomeDir()
 	if conf.Log.Root != "" {
-		log_root = conf.Log.Root
+		logRoot = conf.Log.Root
 	}
 
-	log_path := path.Join(log_root, fmt.Sprintf("%s.log", utils.GetFormatedFileDisplayName()))
+	logPath := path.Join(logRoot, fmt.Sprintf("%s.log", utils.GetFormatedFileDisplayName()))
 	// need to run the caller always "defer log_file.Close()"
-	log_file, err := os.OpenFile(log_path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	logFile, err := os.OpenFile(logPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Errorf("%s", err.Error())
 		return nil, 1
 	}
 
-	log.Debugf("Log File: %s", log_path)
+	log.Debugf("Log File: %s", logPath)
 
-	return log_file, 0
+	return logFile, 0
 }
 
 func getCommandStruct(conf *config.Config) (*command.Command, int) {
 	// aws
-	aws_conf := aws.DefaultConfig
-	aws_conf.Credentials = conf.GetAWSCreds()
-	aws_conf.Region = conf.Rds[name_flag].Region
+	awsConfig := aws.DefaultConfig
+	awsConfig.Credentials = conf.GetAWSCreds()
+	awsConfig.Region = conf.Rds[nameFlag].Region
 
 	// new iam
-	aws_iam := iam.New(aws_conf)
+	awsIam := iam.New(awsConfig)
 
 	// IAM info
-	iam_users, err := aws_iam.ListUsers(&iam.ListUsersInput{})
+	iamUsers, err := awsIam.ListUsers(&iam.ListUsersInput{})
 	if err != nil {
 		log.Errorf("%s", err.Error())
 		return nil, 1
 	}
-	if len(iam_users.Users) <= 0 {
+	if len(iamUsers.Users) <= 0 {
 		log.Errorf("iam user not found")
 		return nil, 1
 	}
@@ -202,28 +202,28 @@ func getCommandStruct(conf *config.Config) (*command.Command, int) {
 	// see also
 	// Tagging Amazon RDS Resources - Amazon Relational Database Service
 	// http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Tagging.html#USER_Tagging.ARN
-	iam_split := strings.SplitAfter(*iam_users.Users[0].ARN, "::")
-	iam_account := iam_split[len(iam_split)-1]
-	iam_split = strings.Split(iam_account, ":")
-	iam_account = iam_split[0]
+	iamSplit := strings.SplitAfter(*iamUsers.Users[0].ARN, "::")
+	iamAccount := iamSplit[len(iamSplit)-1]
+	iamSplit = strings.Split(iamAccount, ":")
+	iamAccount = iamSplit[0]
 
 	// new rds
-	aws_rds := rds.New(aws_conf)
+	awsRds := rds.New(awsConfig)
 
-	cmd_st := &command.Command{
+	commandStruct := &command.Command{
 		OutConfig: conf.Out,
-		RDSConfig: conf.Rds[name_flag],
-		RDSClient: aws_rds,
-		ARNPrefix: "arn:aws:rds:" + conf.Rds[name_flag].Region + ":" + iam_account + ":",
+		RDSConfig: conf.Rds[nameFlag],
+		RDSClient: awsRds,
+		ARNPrefix: "arn:aws:rds:" + conf.Rds[nameFlag].Region + ":" + iamAccount + ":",
 	}
-	log.Debugf("Command: %+v", cmd_st)
+	log.Debugf("Command: %+v", commandStruct)
 
-	return cmd_st, 0
+	return commandStruct, 0
 }
 
 func main() {
-	var ex_code int
-	defer func() { os.Exit(ex_code) }()
+	var exCode int
+	defer func() { os.Exit(exCode) }()
 
 	// environment variable is set up in order to correspond to multi-core CPU
 	if envvar := os.Getenv("GOMAXPROCS"); envvar == "" {
@@ -231,66 +231,66 @@ func main() {
 	}
 
 	// resolve command line
-	conf, ex_code := resolveArgs()
-	if ex_code != 0 || conf == nil {
+	conf, exCode := resolveArgs()
+	if exCode != 0 || conf == nil {
 		return
 	}
 
 	// log setting
-	log_file, ex_code := setLogOptions(conf)
-	if ex_code != 0 || log_file == nil {
+	logFile, exCode := setLogOptions(conf)
+	if exCode != 0 || logFile == nil {
 		return
 	}
 	defer func() {
 		// remove the log file of capacity zero
-		fi, err := log_file.Stat()
-		log_file.Close()
+		fi, err := logFile.Stat()
+		logFile.Close()
 		if err == nil {
 			if fi.Size() <= 0 {
-				os.Remove(log_file.Name())
+				os.Remove(logFile.Name())
 			}
 		}
 	}()
-	log.SetFileOutPut(log_file)
+	log.SetFileOutPut(logFile)
 
 	// check rds env name
-	if _, ok := conf.Rds[name_flag]; !ok {
-		log.Errorf("rds environment information name not found:[%s]", name_flag)
-		ex_code = 1
+	if _, ok := conf.Rds[nameFlag]; !ok {
+		log.Errorf("rds environment information name not found:[%s]", nameFlag)
+		exCode = 1
 		return
 	}
 
 	// get base command struct
-	cmd_st, ex_code := getCommandStruct(conf)
-	if ex_code != 0 || cmd_st == nil {
+	commandStruct, exCode := getCommandStruct(conf)
+	if exCode != 0 || commandStruct == nil {
 		return
 	}
 
 	// call commands
 	args := flag.Args()
-	var cmd_list command.CmdInterface
+	var commandList command.CmdInterface
 
 	// to-do: want to change the "command name" that has been hard-coded
 	switch flag.Args()[0] {
 	case "es":
-		cmd_list = &command.EsCommand{
-			Command: cmd_st,
+		commandList = &command.EsCommand{
+			Command: commandStruct,
 		}
 	case "ls":
-		cmd_list = &command.LsCommand{
-			Command: cmd_st,
+		commandList = &command.LsCommand{
+			Command: commandStruct,
 		}
 	case "rm":
-		cmd_list = &command.RmCommand{
-			Command: cmd_st,
+		commandList = &command.RmCommand{
+			Command: commandStruct,
 		}
 	default:
 		flag.Usage()
-		ex_code = 1
+		exCode = 1
 		return
 	}
 
 	// run commands
-	ex_code = cmd_list.Run(args[1:])
-	log.Debugf("ex_code: %d", ex_code)
+	exCode = commandList.Run(args[1:])
+	log.Debugf("ex_code: %d", exCode)
 }

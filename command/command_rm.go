@@ -14,6 +14,7 @@ import (
 	"github.com/uchimanajet7/rds-try/utils"
 )
 
+// RmCommand struct is the *Command and OptSnap and OptForce and OptItem variable
 type RmCommand struct {
 	*Command
 	OptSnap  bool
@@ -21,22 +22,26 @@ type RmCommand struct {
 	OptItem  string
 }
 
+// ErrInterruptedAskDelete is the "OS Interrupted Ask Delete" error
 var ErrInterruptedAskDelete = errors.New("OS Interrupted Ask Delete")
 
+// Help is the show help text
 func (c *RmCommand) Help() string {
 	// to-do: removal of the fixed value
-	help_text := fmt.Sprintf("\nUsage: %s rm [options]\n\n", utils.GetAppName())
-	help_text += "Options:\n"
-	help_text += "  -s, --snap   list up own db snapshots\n"
-	help_text += "  -f, --force  forced delete without confirmation\n"
+	helpText := fmt.Sprintf("\nUsage: %s rm [options]\n\n", utils.GetAppName())
+	helpText += "Options:\n"
+	helpText += "  -s, --snap   list up own db snapshots\n"
+	helpText += "  -f, --force  forced delete without confirmation\n"
 
-	return help_text
+	return helpText
 }
 
+// Synopsis is the show short help text
 func (c *RmCommand) Synopsis() string {
 	return "delete your created db instances and snapshots"
 }
 
+// Run is the start command
 func (c *RmCommand) Run(args []string) int {
 	log.Infof("start command : rm")
 
@@ -68,40 +73,40 @@ func (c *RmCommand) Run(args []string) int {
 
 func (c *RmCommand) runDetails(f *flag.FlagSet) error {
 	// to get list created in this tool
-	db_list, err := c.DescribeDBInstancesByTags()
+	dbList, err := c.DescribeDBInstancesByTags()
 	if err != nil {
 		return err
 	}
-	ask_flg := 0
+	askCount := 0
 
 	// show db list
-	if len(db_list) <= 0 {
+	if len(dbList) <= 0 {
 		fmt.Printf("\ndb instance list not exist\n")
 	} else {
-		ask_flg++
+		askCount++
 		fmt.Printf("\nlist of own db instance\n")
-		for i, db := range db_list {
+		for i, db := range dbList {
 			fmt.Printf("  [% d] DB Instance: %s\n", i+1, *db.DBInstanceIdentifier)
 		}
 	}
 	// blank new line
 	fmt.Println("")
 
-	var snap_list []*rds.DBSnapshot
+	var snapList []*rds.DBSnapshot
 	if c.OptSnap {
 		// to get list created in this tool
-		snap_list, err = c.DescribeDBSnapshotsByTags()
+		snapList, err = c.DescribeDBSnapshotsByTags()
 		if err != nil {
 			return err
 		}
 
 		// show snapshot list
-		if len(snap_list) <= 0 {
+		if len(snapList) <= 0 {
 			fmt.Printf("db snapshot list not exist\n")
 		} else {
-			ask_flg++
+			askCount++
 			fmt.Printf("list of own db snapshot\n")
-			for i, snap := range snap_list {
+			for i, snap := range snapList {
 				fmt.Printf("  [% d] DB Snapshot: %s\n", i+1, *snap.DBSnapshotIdentifier)
 			}
 		}
@@ -110,16 +115,16 @@ func (c *RmCommand) runDetails(f *flag.FlagSet) error {
 	}
 
 	// list does not exist
-	if ask_flg <= 0 {
+	if askCount <= 0 {
 		return nil
 	}
 
 	// confirm delete
-	var ask_resp string
+	var askResp string
 	if c.OptForce {
-		ask_resp = "yes"
+		askResp = "yes"
 	} else {
-		ask_resp, err = askQuestion("you want to delete all of those? [y/n]:")
+		askResp, err = askQuestion("you want to delete all of those? [y/n]:")
 		if err != nil {
 			log.Errorf("%s", err.Error())
 			return err
@@ -128,16 +133,16 @@ func (c *RmCommand) runDetails(f *flag.FlagSet) error {
 	// blank new line
 	fmt.Println("")
 
-	switch ask_resp {
+	switch askResp {
 	case "y", "Y", "yes", "YES", "Yes":
 		// delete db instance
-		err = c.DeleteDBResources(db_list)
+		err = c.DeleteDBResources(dbList)
 		if err != nil {
 			return err
 		}
 		// delete db snapshot
 		if c.OptSnap {
-			err = c.DeleteDBResources(snap_list)
+			err = c.DeleteDBResources(snapList)
 			if err != nil {
 				return err
 			}

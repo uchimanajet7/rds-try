@@ -21,120 +21,120 @@ func getTestConfig() (*config.Config, string, error) {
 		SecretKey: "ca485e5b709eae0ceacd68b61cdb28119f13942c71bbb68066c8a3cb45185a39",
 	}
 
-	test_name := utils.GetAppName() + "-test"
-	temp_dir, _ := ioutil.TempDir("", test_name)
+	testName := utils.GetAppName() + "-test"
+	tempDir, _ := ioutil.TempDir("", testName)
 	out := config.OutConfig{
-		Root: temp_dir,
+		Root: tempDir,
 		File: true,
 		Bom:  true,
 	}
 
 	log := config.LogConfig{
-		Root:    temp_dir,
+		Root:    tempDir,
 		Verbose: true,
-		Json:    true,
+		JSON:    true,
 	}
 
 	rds := config.RDSConfig{
 		MultiAz: true,
-		DBId:    utils.GetFormatedDBDisplayName(test_name),
+		DBId:    utils.GetFormatedDBDisplayName(testName),
 		Region:  "us-west-2",
 		User:    "test-admin",
 		Pass:    "pass-pass",
 		Type:    "db.m3.medium",
 	}
-	rds_map := map[string]config.RDSConfig{
+	rdsMap := map[string]config.RDSConfig{
 		"default2": rds,
 	}
 
 	config := &config.Config{
 		Aws: aws,
 		Out: out,
-		Rds: rds_map,
+		Rds: rdsMap,
 		Log: log,
 	}
-	temp_file, err := ioutil.TempFile(temp_dir, utils.GetAppName()+"-test")
+	tempFile, err := ioutil.TempFile(tempDir, utils.GetAppName()+"-test")
 	if err != nil {
-		return nil, temp_dir, err
+		return nil, tempDir, err
 	}
-	if err := toml.NewEncoder(temp_file).Encode(config); err != nil {
-		return nil, temp_dir, err
+	if err := toml.NewEncoder(tempFile).Encode(config); err != nil {
+		return nil, tempDir, err
 	}
-	temp_file.Sync()
-	temp_file.Close()
+	tempFile.Sync()
+	tempFile.Close()
 
-	os.Args = []string{utils.GetAppName(), "-c=" + temp_file.Name(), "-n=default", "ls"}
+	os.Args = []string{utils.GetAppName(), "-c=" + tempFile.Name(), "-n=default", "ls"}
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
-	return config, temp_dir, nil
+	return config, tempDir, nil
 }
 
 func TestResolveArgs(t *testing.T) {
-	test_conf, temp_dir, err := getTestConfig()
-	defer os.RemoveAll(temp_dir)
+	testConfig, tempDir, err := getTestConfig()
+	defer os.RemoveAll(tempDir)
 	if err != nil {
 		t.Errorf("config file for the test was not created: %s", err.Error())
 	}
 
 	// resolve command line
-	conf, ex_code := resolveArgs()
-	if ex_code != 0 || conf == nil {
+	conf, exCode := resolveArgs()
+	if exCode != 0 || conf == nil {
 		t.Errorf("config file load error")
 	}
-	if !reflect.DeepEqual(test_conf, conf) {
-		t.Errorf("config data not match: %+v/%+v", test_conf, conf)
+	if !reflect.DeepEqual(testConfig, conf) {
+		t.Errorf("config data not match: %+v/%+v", testConfig, conf)
 	}
 }
 
 func TestSetLogOptions(t *testing.T) {
-	test_conf, temp_dir, err := getTestConfig()
-	defer os.RemoveAll(temp_dir)
+	testConfig, tempDir, err := getTestConfig()
+	defer os.RemoveAll(tempDir)
 	if err != nil {
 		t.Errorf("config file for the test was not created: %s", err.Error())
 	}
 
 	// resolve command line
-	conf, ex_code := resolveArgs()
-	if ex_code != 0 || conf == nil {
+	conf, exCode := resolveArgs()
+	if exCode != 0 || conf == nil {
 		t.Errorf("config file load error")
 	}
-	if !reflect.DeepEqual(test_conf, conf) {
-		t.Errorf("config data not match: %+v/%+v", test_conf, conf)
+	if !reflect.DeepEqual(testConfig, conf) {
+		t.Errorf("config data not match: %+v/%+v", testConfig, conf)
 	}
 
 	// log setting
-	log_file, ex_code := setLogOptions(conf)
-	defer log_file.Close()
-	if ex_code != 0 || log_file == nil {
+	logFile, exCode := setLogOptions(conf)
+	defer logFile.Close()
+	if exCode != 0 || logFile == nil {
 		t.Errorf("log setting error")
 	}
 }
 
 func TestGetCommandStruct(t *testing.T) {
-	test_conf, temp_dir, err := getTestConfig()
-	defer os.RemoveAll(temp_dir)
+	testConfig, tempDir, err := getTestConfig()
+	defer os.RemoveAll(tempDir)
 	if err != nil {
 		t.Errorf("config file for the test was not created: %s", err.Error())
 	}
 
 	// resolve command line
-	conf, ex_code := resolveArgs()
-	if ex_code != 0 || conf == nil {
+	conf, exCode := resolveArgs()
+	if exCode != 0 || conf == nil {
 		t.Errorf("config file load error")
 	}
-	if !reflect.DeepEqual(test_conf, conf) {
-		t.Errorf("config data not match: %+v/%+v", test_conf, conf)
+	if !reflect.DeepEqual(testConfig, conf) {
+		t.Errorf("config data not match: %+v/%+v", testConfig, conf)
 	}
 
 	// get base command
 	// Known error message:[The security token included in the request is invalid.]
 	t.Log("Known error message:[The security token included in the request is invalid.]")
 	fmt.Println(" ### Known error message:[The security token included in the request is invalid.]")
-	cmd_st, ex_code := getCommandStruct(conf)
-	if ex_code != 0 || cmd_st == nil {
+	commandStruct, exCode := getCommandStruct(conf)
+	if exCode != 0 || commandStruct == nil {
 		return
 	}
-	if !reflect.DeepEqual(cmd_st.RDSConfig, conf.Rds) {
-		t.Errorf("RDS config data not match: %+v/%+v", cmd_st.RDSConfig, conf.Rds)
+	if !reflect.DeepEqual(commandStruct.RDSConfig, conf.Rds) {
+		t.Errorf("RDS config data not match: %+v/%+v", commandStruct.RDSConfig, conf.Rds)
 	}
 }

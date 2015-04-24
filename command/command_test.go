@@ -38,46 +38,46 @@ func getTestClient(code int, body string) (*httptest.Server, *Command) {
 	httpClient := &http.Client{Transport: transport}
 
 	// Override endpoints
-	test_region := "rds-try-test-1"
-	aws_conf := aws.DefaultConfig
-	aws_conf.Credentials = aws.Creds("awsAccesskey1", "awsSecretKey2", "")
-	aws_conf.Region = test_region
-	aws_conf.Endpoint = server.URL
-	aws_conf.HTTPClient = httpClient
+	testRegion := "rds-try-test-1"
+	awsConf := aws.DefaultConfig
+	awsConf.Credentials = aws.Creds("awsAccesskey1", "awsSecretKey2", "")
+	awsConf.Region = testRegion
+	awsConf.Endpoint = server.URL
+	awsConf.HTTPClient = httpClient
 
-	aws_rds := rds.New(aws_conf)
+	awsRds := rds.New(awsConf)
 
-	test_name := utils.GetAppName() + "-test"
-	temp_dir, _ := ioutil.TempDir("", test_name)
-	defer os.RemoveAll(temp_dir)
+	testName := utils.GetAppName() + "-test"
+	tempDir, _ := ioutil.TempDir("", testName)
+	defer os.RemoveAll(tempDir)
 
 	out := config.OutConfig{
-		Root: temp_dir,
+		Root: tempDir,
 		File: true,
 		Bom:  true,
 	}
 
 	rds := config.RDSConfig{
 		MultiAz: false,
-		DBId:    utils.GetFormatedDBDisplayName(test_name),
-		Region:  test_region,
+		DBId:    utils.GetFormatedDBDisplayName(testName),
+		Region:  testRegion,
 		User:    "test-admin",
 		Pass:    "pass-pass",
 		Type:    "db.m3.medium",
 	}
 
-	cmd_test := &Command{
+	cmdTest := &Command{
 		OutConfig: out,
 		RDSConfig: rds,
-		RDSClient: aws_rds,
-		ARNPrefix: "arn:aws:rds:" + test_region + ":" + "123456789" + ":",
+		RDSClient: awsRds,
+		ARNPrefix: "arn:aws:rds:" + testRegion + ":" + "123456789" + ":",
 	}
 
-	return server, cmd_test
+	return server, cmdTest
 }
 
 func TestDescribeDBInstances(t *testing.T) {
-	ts, tc := getTestClient(200, sr_DescribeDBInstancesResponse)
+	ts, tc := getTestClient(200, srDescribeDBInstancesResponse)
 	defer ts.Close()
 
 	input := &rds.DescribeDBInstancesInput{}
@@ -92,7 +92,7 @@ func TestDescribeDBInstances(t *testing.T) {
 }
 
 func TestDescribeDBInstance(t *testing.T) {
-	ts, tc := getTestClient(200, sr_DescribeDBInstanceResponse)
+	ts, tc := getTestClient(200, srDescribeDBInstanceResponse)
 	defer ts.Close()
 
 	id := "rds-try-test-db-1"
@@ -107,17 +107,17 @@ func TestDescribeDBInstance(t *testing.T) {
 }
 
 func TestCheckListTagsForResourceMessage(t *testing.T) {
-	ts, tc := getTestClient(200, sr_ListTagsForResourceResponse)
+	ts, tc := getTestClient(200, srListTagsForResourceResponse)
 	defer ts.Close()
 
-	db_id := "rds-try-test"
+	dbID := "rds-try-test"
 	var ti rds.DBInstance
-	ti.DBInstanceIdentifier = &db_id
+	ti.DBInstanceIdentifier = &dbID
 
 	ri, err := tc.checkListTagsForResource(&ti)
 
 	if err != nil {
-		t.Errorf("[checkListTagsForResource] result error: %s", err.Error())
+		t.Errorf("[checkListTagsFor] result error: %s", err.Error())
 	}
 	if !ri {
 		t.Error("tags count not match")
@@ -125,13 +125,13 @@ func TestCheckListTagsForResourceMessage(t *testing.T) {
 }
 
 func TestModifyDBInstance(t *testing.T) {
-	ts, tc := getTestClient(200, sr_DescribeDBInstanceResponse)
+	ts, tc := getTestClient(200, srDescribeDBInstanceResponse)
 	defer ts.Close()
 
 	id := "rds-try-test-db-1"
 	ri, err := tc.DescribeDBInstance(id)
 
-	tsm, tcm := getTestClient(200, sr_ModifyDBInstanceResponse)
+	tsm, tcm := getTestClient(200, srModifyDBInstanceResponse)
 	defer tsm.Close()
 
 	rim, err := tcm.ModifyDBInstance(id, ri)
@@ -145,7 +145,7 @@ func TestModifyDBInstance(t *testing.T) {
 }
 
 func TestRebootDBInstance(t *testing.T) {
-	ts, tc := getTestClient(200, sr_RebootDBInstanceResponse)
+	ts, tc := getTestClient(200, srRebootDBInstanceResponse)
 	defer ts.Close()
 
 	id := "rds-try-test-db-1"
@@ -163,7 +163,7 @@ func TestRebootDBInstance(t *testing.T) {
 }
 
 func TestDescribeDBSnapshots(t *testing.T) {
-	ts, tc := getTestClient(200, sr_DescribeDBSnapshotsResponse)
+	ts, tc := getTestClient(200, srDescribeDBSnapshotsResponse)
 	defer ts.Close()
 
 	input := &rds.DescribeDBSnapshotsInput{}
@@ -178,7 +178,7 @@ func TestDescribeDBSnapshots(t *testing.T) {
 }
 
 func TestDescribeLatestDBSnapshot(t *testing.T) {
-	ts, tc := getTestClient(200, sr_DescribeDBSnapshotResponse)
+	ts, tc := getTestClient(200, srDescribeDBSnapshotResponse)
 	defer ts.Close()
 
 	id := "rds-try-test-db-1"
@@ -193,7 +193,7 @@ func TestDescribeLatestDBSnapshot(t *testing.T) {
 }
 
 func TestDescribeDBSnapshot(t *testing.T) {
-	ts, tc := getTestClient(200, sr_DescribeDBSnapshotResponse)
+	ts, tc := getTestClient(200, srDescribeDBSnapshotResponse)
 	defer ts.Close()
 
 	id := "before-test-1"
@@ -208,7 +208,7 @@ func TestDescribeDBSnapshot(t *testing.T) {
 }
 
 func TestDeleteDBInstance(t *testing.T) {
-	ts, tc := getTestClient(200, sr_DeleteDBInstanceResponse)
+	ts, tc := getTestClient(200, srDeleteDBInstanceResponse)
 	defer ts.Close()
 
 	id := "rds-try-test-db-1"
@@ -226,7 +226,7 @@ func TestDeleteDBInstance(t *testing.T) {
 }
 
 func TestCreateDBSnapshot(t *testing.T) {
-	ts, tc := getTestClient(200, sr_CreateDBSnapshotResponse)
+	ts, tc := getTestClient(200, srCreateDBSnapshotResponse)
 	defer ts.Close()
 
 	id := "rds-try-test-db-1"
@@ -241,7 +241,7 @@ func TestCreateDBSnapshot(t *testing.T) {
 }
 
 func TestDeleteDBSnapshot(t *testing.T) {
-	ts, tc := getTestClient(200, sr_DeleteDBSnapshotResponse)
+	ts, tc := getTestClient(200, srDeleteDBSnapshotResponse)
 	defer ts.Close()
 
 	id := "before-test-1"
@@ -256,7 +256,7 @@ func TestDeleteDBSnapshot(t *testing.T) {
 }
 
 func TestCheckPendingStatus(t *testing.T) {
-	ts, tc := getTestClient(200, sr_DescribeDBInstanceResponse)
+	ts, tc := getTestClient(200, srDescribeDBInstanceResponse)
 	defer ts.Close()
 
 	id := "rds-try-test-db-1"
@@ -269,19 +269,19 @@ func TestCheckPendingStatus(t *testing.T) {
 }
 
 func TestRestoreDBInstanceFromDBSnapshot(t *testing.T) {
-	ts, tc := getTestClient(200, sr_DescribeDBInstanceResponse)
+	ts, tc := getTestClient(200, srDescribeDBInstanceResponse)
 	defer ts.Close()
 
 	id := "rds-try-test-db-1"
 	ri, _ := tc.DescribeDBInstance(id)
 
-	tss, tcs := getTestClient(200, sr_DescribeDBSnapshotResponse)
+	tss, tcs := getTestClient(200, srDescribeDBSnapshotResponse)
 	defer tss.Close()
 
 	ids := "before-test-1"
 	ris, _ := tcs.DescribeDBSnapshot(ids)
 
-	tsr, tcr := getTestClient(200, sr_RestoreDBInstanceFromDBSnapshotResponse)
+	tsr, tcr := getTestClient(200, srRestoreDBInstanceFromDBSnapshotResponse)
 	defer tsr.Close()
 
 	class := "db.t1.micro"
@@ -334,7 +334,7 @@ func TestGetSpecifyTags(t *testing.T) {
 	}
 	for _, i := range tags {
 		switch *i.Key {
-		case rt_name_text, rt_time_text:
+		case rtNameText, rtTimeText:
 			continue
 		default:
 			t.Errorf("GetSpecifyTags key name not match: %s", *i.Key)
@@ -381,19 +381,19 @@ func TestGetDbOpenValues(t *testing.T) {
 }
 
 func TestWriteCSVFile(t *testing.T) {
-	test_name := utils.GetAppName() + "-test"
-	temp_dir, _ := ioutil.TempDir("", test_name)
+	testName := utils.GetAppName() + "-test"
+	tempDir, _ := ioutil.TempDir("", testName)
 
-	temp_file, err := ioutil.TempFile(temp_dir, utils.GetAppName()+"-test")
+	tempFile, err := ioutil.TempFile(tempDir, utils.GetAppName()+"-test")
 	if err != nil {
 		t.Errorf("failed to create the temp file: %s", err.Error())
 	}
-	f_stat, _ := temp_file.Stat()
-	f_name := temp_file.Name()
+	fStat, _ := tempFile.Stat()
+	fName := tempFile.Name()
 
-	temp_file.Sync()
-	temp_file.Close()
-	defer os.RemoveAll(temp_dir)
+	tempFile.Sync()
+	tempFile.Close()
+	defer os.RemoveAll(tempDir)
 
 	db, _ := sql.Open("testdb", "")
 	defer db.Close()
@@ -410,29 +410,29 @@ func TestWriteCSVFile(t *testing.T) {
 	res, err := db.Query(sql)
 	args := &writeCSVFileArgs{
 		Rows:     res,
-		FileName: f_stat.Name(),
-		Path:     temp_dir,
+		FileName: fStat.Name(),
+		Path:     tempDir,
 		Bom:      false,
 	}
 
-	csv_s := writeCSVFile(args)
+	csvState := writeCSVFile(args)
 
-	file, err := os.OpenFile(f_name, os.O_RDONLY, 0777)
+	file, err := os.OpenFile(fName, os.O_RDONLY, 0777)
 	defer file.Close()
 
-	f_stat, _ = file.Stat()
+	fStat, _ = file.Stat()
 
-	if !csv_s {
+	if !csvState {
 		t.Errorf("[writeCSVFile] result error: %s", err.Error())
 	}
-	if f_stat.Size() <= 0 {
-		t.Errorf("csv file not out put: %d", f_stat.Size())
+	if fStat.Size() <= 0 {
+		t.Errorf("csv file not out put: %d", fStat.Size())
 	}
 }
 
 // It takes 30 seconds every time
 func TestWaitForStatusAvailable(t *testing.T) {
-	ts, tc := getTestClient(200, sr_DescribeDBInstanceResponse)
+	ts, tc := getTestClient(200, srDescribeDBInstanceResponse)
 	defer ts.Close()
 
 	t.Log("It takes 30 seconds every time")

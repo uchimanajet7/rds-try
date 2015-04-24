@@ -11,12 +11,12 @@ import (
 	"github.com/uchimanajet7/rds-try/logger"
 )
 
-const app_name = "rds-try"
-// see also "_tag" file
-const app_version = "v0.0.2"
+const appName = "rds-try"
+const appVersion = "v0.0.1"
 
 var log = logger.GetLogger("utils")
 
+// GetHomeDir is the function to acquire the user's home directory.
 func GetHomeDir() string {
 	// OS under execution is Windows
 	if runtime.GOOS == "windows" {
@@ -40,6 +40,7 @@ func GetHomeDir() string {
 	return home
 }
 
+// GetUserName is the function to acquire the user name.
 func GetUserName() string {
 	var user = ""
 
@@ -60,38 +61,45 @@ func GetUserName() string {
 	return user
 }
 
-// format "rds-try"
+// GetAppName is the function to acquire the application name.
+// return format: "rds-try"
 func GetAppName() string {
-	return app_name
+	return appName
 }
 
-// format "v0.0.1"
+// GetAppVersion is the function to acquire the application version.
+// return format: "v0.0.1"
 func GetAppVersion() string {
-	return app_version
+	return appVersion
 }
 
-// format "2015-01-20-18-03-35"
+// GetFormatedTime is the function to acquire the edited "now date time".
+// return format: "2015-01-20-18-03-35"
 func GetFormatedTime() string {
 	return time.Now().Format("2006-01-02-15-04-05")
 }
 
-// format "rds-try-v"
+// GetPrefix is the function to acquire the application name prefix.
+// return format: "rds-try-v"
 func GetPrefix() string {
 	return fmt.Sprintf("%s-v", GetAppName())
 }
 
-// format "rds-try-v0-0-1"
+// GetFormatedAppName is the function to acquire the edited application name and version.
+// return format: "rds-try-v0-0-1"
 func GetFormatedAppName() string {
-	ver_name := strings.Replace(GetAppVersion(), ".", "-", -1)
-	return fmt.Sprintf("%s-%s", GetAppName(), ver_name)
+	versionText := strings.Replace(GetAppVersion(), ".", "-", -1)
+	return fmt.Sprintf("%s-%s", GetAppName(), versionText)
 }
 
-// format "rds-try-v0-0-1-2015-01-20-18-03-35-dbIdentifier"
+// GetFormatedDBDisplayName is the function to acquire the edited application name and version and "now date time".
+// return format: "rds-try-v0-0-1-2015-01-20-18-03-35-dbIdentifier"
 func GetFormatedDBDisplayName(dbIdentifier string) string {
 	return fmt.Sprintf("%s-%s-%s", GetFormatedAppName(), GetFormatedTime(), dbIdentifier)
 }
 
-// format "rds-try-2015-01-20"
+// GetFormatedFileDisplayName is the function to acquire the edited application name and "now date time".
+// return format: "rds-try-2015-01-20"
 func GetFormatedFileDisplayName() string {
 	return fmt.Sprintf("%s-%s", GetAppName(), time.Now().Format("2006-01-02"))
 }

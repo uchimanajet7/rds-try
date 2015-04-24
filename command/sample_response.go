@@ -2,7 +2,7 @@ package command
 
 // The sample response for tests.
 
-var sr_DescribeDBInstanceResponse = `
+var srDescribeDBInstanceResponse = `
 <DescribeDBInstancesResponse xmlns="http://rds.amazonaws.com/doc/2014-10-31/">
   <DescribeDBInstancesResult>
     <DBInstances>
@@ -82,7 +82,7 @@ var sr_DescribeDBInstanceResponse = `
   </ResponseMetadata>
 </DescribeDBInstancesResponse>
 `
-var sr_ListTagsForResourceResponse = `
+var srListTagsForResourceResponse = `
 <ListTagsForResourceResponse xmlns="http://rds.amazonaws.com/doc/2014-10-31/">
   <ListTagsForResourceResult>
     <TagList>
@@ -101,7 +101,7 @@ var sr_ListTagsForResourceResponse = `
   </ResponseMetadata>
 </ListTagsForResourceResponse>
 `
-var sr_DescribeDBInstancesResponse = `
+var srDescribeDBInstancesResponse = `
 <DescribeDBInstancesResponse xmlns="http://rds.amazonaws.com/doc/2014-10-31/">
   <DescribeDBInstancesResult>
     <DBInstances>
@@ -319,7 +319,7 @@ var sr_DescribeDBInstancesResponse = `
   </ResponseMetadata>
 </DescribeDBInstancesResponse>
 `
-var sr_ModifyDBInstanceResponse = `
+var srModifyDBInstanceResponse = `
 <ModifyDBInstanceResponse xmlns="http://rds.amazonaws.com/doc/2014-10-31/">
   <ModifyDBInstanceResult>
     <DBInstance>
@@ -401,7 +401,7 @@ var sr_ModifyDBInstanceResponse = `
   </ResponseMetadata>
 </ModifyDBInstanceResponse>
 `
-var sr_RebootDBInstanceResponse = `
+var srRebootDBInstanceResponse = `
 <RebootDBInstanceResponse xmlns="http://rds.amazonaws.com/doc/2014-10-31/">
   <RebootDBInstanceResult>
     <DBInstance>
@@ -479,7 +479,7 @@ var sr_RebootDBInstanceResponse = `
   </ResponseMetadata>
 </RebootDBInstanceResponse>
 `
-var sr_DescribeDBSnapshotsResponse = `
+var srDescribeDBSnapshotsResponse = `
 <DescribeDBSnapshotsResponse xmlns="http://rds.amazonaws.com/doc/2014-10-31/">
   <DescribeDBSnapshotsResult>
     <DBSnapshots>
@@ -550,7 +550,7 @@ var sr_DescribeDBSnapshotsResponse = `
   </ResponseMetadata>
 </DescribeDBSnapshotsResponse>
 `
-var sr_DescribeDBSnapshotResponse = `
+var srDescribeDBSnapshotResponse = `
 <DescribeDBSnapshotsResponse xmlns="http://rds.amazonaws.com/doc/2014-10-31/">
   <DescribeDBSnapshotsResult>
     <DBSnapshots>
@@ -581,7 +581,7 @@ var sr_DescribeDBSnapshotResponse = `
   </ResponseMetadata>
 </DescribeDBSnapshotsResponse>
 `
-var sr_DeleteDBInstanceResponse = `
+var srDeleteDBInstanceResponse = `
 <DeleteDBInstanceResponse xmlns="http://rds.amazonaws.com/doc/2014-10-31/">
   <DeleteDBInstanceResult>
     <DBInstance>
@@ -659,7 +659,7 @@ var sr_DeleteDBInstanceResponse = `
   </ResponseMetadata>
 </DeleteDBInstanceResponse>
 `
-var sr_DeleteDBSnapshotResponse = `
+var srDeleteDBSnapshotResponse = `
 <DeleteDBSnapshotResponse xmlns="http://rds.amazonaws.com/doc/2014-10-31/">
   <DeleteDBSnapshotResult>
     <DBSnapshot>
@@ -688,7 +688,7 @@ var sr_DeleteDBSnapshotResponse = `
   </ResponseMetadata>
 </DeleteDBSnapshotResponse>
 `
-var sr_CreateDBSnapshotResponse = `
+var srCreateDBSnapshotResponse = `
 <CreateDBSnapshotResponse xmlns="http://rds.amazonaws.com/doc/2014-10-31/">
   <CreateDBSnapshotResult>
     <DBSnapshot>
@@ -716,7 +716,7 @@ var sr_CreateDBSnapshotResponse = `
   </ResponseMetadata>
 </CreateDBSnapshotResponse>
 `
-var sr_RestoreDBInstanceFromDBSnapshotResponse = `
+var srRestoreDBInstanceFromDBSnapshotResponse = `
 <RestoreDBInstanceFromDBSnapshotResponse xmlns="http://rds.amazonaws.com/doc/2014-10-31/">
   <RestoreDBInstanceFromDBSnapshotResult>
     <DBInstance>

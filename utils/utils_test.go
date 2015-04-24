@@ -19,7 +19,7 @@ func TestGetUserName(t *testing.T) {
 }
 
 func TestGetAppName(t *testing.T) {
-	if app_name != GetAppName() {
+	if appName != GetAppName() {
 		t.Error("app name not match")
 	}
 }

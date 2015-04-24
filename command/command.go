@@ -20,6 +20,7 @@ import (
 	"github.com/uchimanajet7/rds-try/utils"
 )
 
+// CmdInterface interface is the Help and Run and Synopsis function
 type CmdInterface interface {
 	// return long help string
 	Help() string
@@ -31,6 +32,7 @@ type CmdInterface interface {
 	Synopsis() string
 }
 
+// Command struct is the OutConfig and RDSConfig and RDSClient and ARNPrefix variable
 type Command struct {
 	OutConfig config.OutConfig
 	RDSConfig config.RDSConfig
@@ -41,11 +43,16 @@ type Command struct {
 var log = logger.GetLogger("command")
 
 var (
+	// ErrDBInstancetNotFound is the "DB Instance is not found" error
 	ErrDBInstancetNotFound = errors.New("DB Instance is not found")
-	ErrSnapshotNotFound    = errors.New("DB Snapshot is not found")
-	ErrDriverNotFound      = errors.New("DB Driver is not found")
-	ErrRdsTypesNotFound    = errors.New("RDS Types is not found")
-	ErrRdsARNsNotFound     = errors.New("RDS ARN Types is not found")
+	// ErrSnapshotNotFound is the "DB　Snapshot is not found" error
+	ErrSnapshotNotFound = errors.New("DB　Snapshot is not found")
+	// ErrDriverNotFound is the "DB　Driver is not found" error
+	ErrDriverNotFound = errors.New("DB　Driver is not found")
+	// ErrRdsTypesNotFound is the "RDS Types is not found" error
+	ErrRdsTypesNotFound = errors.New("RDS Types is not found")
+	// ErrRdsARNsNotFound is the "RDS ARN Types is not found" error
+	ErrRdsARNsNotFound = errors.New("RDS ARN Types is not found")
 )
 
 func (c *Command) describeDBInstances(input *rds.DescribeDBInstancesInput) ([]*rds.DBInstance, error) {
@@ -59,6 +66,7 @@ func (c *Command) describeDBInstances(input *rds.DescribeDBInstancesInput) ([]*r
 	return output.DBInstances, err
 }
 
+// DescribeDBInstance is show the aws rds db instance infomations
 // all status in target, result return only one
 func (c *Command) DescribeDBInstance(dbIdentifier string) (*rds.DBInstance, error) {
 	// set DB ID
@@ -71,15 +79,16 @@ func (c *Command) DescribeDBInstance(dbIdentifier string) (*rds.DBInstance, erro
 		return nil, err
 	}
 
-	db_len := len(output)
-	if db_len < 1 {
+	dbLen := len(output)
+	if dbLen < 1 {
 		log.Errorf("%s", ErrDBInstancetNotFound.Error())
 		return nil, ErrDBInstancetNotFound
 	}
 
-	return output[db_len-1], err
+	return output[dbLen-1], err
 }
 
+// check tag count
 func (c *Command) checkListTagsForResource(rdstypes interface{}) (bool, error) {
 	// want to filter by tag name and value
 	// see also
@@ -94,7 +103,7 @@ func (c *Command) checkListTagsForResource(rdstypes interface{}) (bool, error) {
 		return state, ErrRdsARNsNotFound
 	}
 
-	tag_output, err := c.RDSClient.ListTagsForResource(
+	tagOutput, err := c.RDSClient.ListTagsForResource(
 		&rds.ListTagsForResourceInput{
 			ResourceName: &arn,
 		})
@@ -103,27 +112,27 @@ func (c *Command) checkListTagsForResource(rdstypes interface{}) (bool, error) {
 		log.Errorf("%s", err.Error())
 		return state, err
 	}
-	if len(tag_output.TagList) <= 0 {
+	if len(tagOutput.TagList) <= 0 {
 		return state, err
 	}
 
 	// check tag name and value
-	tag_cnt := 0
-	for _, tag := range tag_output.TagList {
+	tagCount := 0
+	for _, tag := range tagOutput.TagList {
 		switch *tag.Key {
-		case rt_name_text:
+		case rtNameText:
 			// if the rt_name tag exists, should the prefix value has become an application name
 			if strings.HasPrefix(*tag.Value, utils.GetPrefix()) {
-				tag_cnt++
+				tagCount++
 			}
-		case rt_time_text:
+		case rtTimeText:
 			// rt_time tag exists
-			tag_cnt++
+			tagCount++
 		}
 	}
 
 	// to-do: Fixed value the number you are using to the judgment has been hard-coded
-	if tag_cnt >= 2 {
+	if tagCount >= 2 {
 		state = true
 		return state, err
 	}
@@ -131,6 +140,7 @@ func (c *Command) checkListTagsForResource(rdstypes interface{}) (bool, error) {
 	return state, err
 }
 
+// DescribeDBInstancesByTags is aws rds db instances list up by tags
 func (c *Command) DescribeDBInstancesByTags() ([]*rds.DBInstance, error) {
 	input := &rds.DescribeDBInstancesInput{}
 
@@ -155,17 +165,18 @@ func (c *Command) DescribeDBInstancesByTags() ([]*rds.DBInstance, error) {
 	return dbInstances, err
 }
 
+// ModifyDBInstance is modify aws rds db instance setting
 func (c *Command) ModifyDBInstance(dbIdentifier string, dbInstance *rds.DBInstance) (*rds.DBInstance, error) {
-	var vpc_ids []*string
-	for _, vpc_id := range dbInstance.VPCSecurityGroups {
-		vpc_ids = append(vpc_ids, vpc_id.VPCSecurityGroupID)
+	var vpcIDs []*string
+	for _, vpcID := range dbInstance.VPCSecurityGroups {
+		vpcIDs = append(vpcIDs, vpcID.VPCSecurityGroupID)
 	}
 
 	apply := true
 	input := &rds.ModifyDBInstanceInput{
 		DBInstanceIdentifier: &dbIdentifier,
 		DBParameterGroupName: dbInstance.DBParameterGroups[0].DBParameterGroupName,
-		VPCSecurityGroupIDs:  vpc_ids,
+		VPCSecurityGroupIDs:  vpcIDs,
 		ApplyImmediately:     &apply, // "ApplyImmediately" is always true
 	}
 
@@ -179,6 +190,7 @@ func (c *Command) ModifyDBInstance(dbIdentifier string, dbInstance *rds.DBInstan
 	return output.DBInstance, err
 }
 
+// RebootDBInstance is reboot aws rds db instance
 func (c *Command) RebootDBInstance(dbIdentifier string) (*rds.DBInstance, error) {
 	input := &rds.RebootDBInstanceInput{
 		DBInstanceIdentifier: &dbIdentifier,
@@ -194,6 +206,7 @@ func (c *Command) RebootDBInstance(dbIdentifier string) (*rds.DBInstance, error)
 	return output.DBInstance, err
 }
 
+// RestoreDBInstanceFromDBSnapshotArgs struct is the DBInstanceClass and DBIdentifier and MultiAZ and Snapshot and Instance variable
 type RestoreDBInstanceFromDBSnapshotArgs struct {
 	DBInstanceClass string
 	DBIdentifier    string
@@ -202,6 +215,7 @@ type RestoreDBInstanceFromDBSnapshotArgs struct {
 	Instance        *rds.DBInstance
 }
 
+// RestoreDBInstanceFromDBSnapshot is restore aws rds db instance from db snap shot
 func (c *Command) RestoreDBInstanceFromDBSnapshot(args *RestoreDBInstanceFromDBSnapshotArgs) (*rds.DBInstance, error) {
 	input := &rds.RestoreDBInstanceFromDBSnapshotInput{
 		DBInstanceClass:      &args.DBInstanceClass,
@@ -223,6 +237,7 @@ func (c *Command) RestoreDBInstanceFromDBSnapshot(args *RestoreDBInstanceFromDBS
 	return output.DBInstance, err
 }
 
+// DescribeDBSnapshotsByTags is show aws rds snap shot by tags
 func (c *Command) DescribeDBSnapshotsByTags() ([]*rds.DBSnapshot, error) {
 	input := &rds.DescribeDBSnapshotsInput{}
 
@@ -258,6 +273,7 @@ func (c *Command) describeDBSnapshots(input *rds.DescribeDBSnapshotsInput) ([]*r
 	return output.DBSnapshots, err
 }
 
+// DescribeLatestDBSnapshot is show latest aws rds db snap shot
 // the target only "available"
 func (c *Command) DescribeLatestDBSnapshot(dbIdentifier string) (*rds.DBSnapshot, error) {
 	input := &rds.DescribeDBSnapshotsInput{
@@ -281,15 +297,16 @@ func (c *Command) DescribeLatestDBSnapshot(dbIdentifier string) (*rds.DBSnapshot
 		dbSnapshots = append(dbSnapshots, snapshot)
 	}
 
-	db_len := len(dbSnapshots)
-	if db_len < 1 {
+	dbLen := len(dbSnapshots)
+	if dbLen < 1 {
 		log.Errorf("%s", ErrSnapshotNotFound.Error())
 		return nil, ErrSnapshotNotFound
 	}
 
-	return dbSnapshots[db_len-1], err
+	return dbSnapshots[dbLen-1], err
 }
 
+// DescribeDBSnapshot is show aws rds db snap shot
 // all status in target, result return only one
 func (c *Command) DescribeDBSnapshot(snapshotIdentifier string) (*rds.DBSnapshot, error) {
 	input := &rds.DescribeDBSnapshotsInput{
@@ -302,15 +319,16 @@ func (c *Command) DescribeDBSnapshot(snapshotIdentifier string) (*rds.DBSnapshot
 		return nil, err
 	}
 
-	db_len := len(output)
-	if db_len < 1 {
+	dbLen := len(output)
+	if dbLen < 1 {
 		log.Errorf("%s", ErrSnapshotNotFound.Error())
 		return nil, ErrSnapshotNotFound
 	}
 
-	return output[db_len-1], err
+	return output[dbLen-1], err
 }
 
+// DeleteDBInstance is delete aws rds db instance
 // delete DB instance and skip create snapshot
 func (c *Command) DeleteDBInstance(dbIdentifier string) (*rds.DBInstance, error) {
 	skip := true
@@ -329,6 +347,7 @@ func (c *Command) DeleteDBInstance(dbIdentifier string) (*rds.DBInstance, error)
 	return output.DBInstance, err
 }
 
+// CreateDBSnapshot is create aws rds db snap shot
 func (c *Command) CreateDBSnapshot(dbIdentifier string) (*rds.DBSnapshot, error) {
 	snapshotID := utils.GetFormatedDBDisplayName(dbIdentifier)
 	input := &rds.CreateDBSnapshotInput{
@@ -347,6 +366,7 @@ func (c *Command) CreateDBSnapshot(dbIdentifier string) (*rds.DBSnapshot, error)
 	return output.DBSnapshot, err
 }
 
+// DeleteDBSnapshot is delete aws rds db snap shot
 func (c *Command) DeleteDBSnapshot(snapshotIdentifier string) (*rds.DBSnapshot, error) {
 	input := &rds.DeleteDBSnapshotInput{
 		DBSnapshotIdentifier: &snapshotIdentifier,
@@ -362,6 +382,7 @@ func (c *Command) DeleteDBSnapshot(snapshotIdentifier string) (*rds.DBSnapshot, 
 	return output.DBSnapshot, err
 }
 
+// CheckPendingStatus is check pending status aws rds db instance setting
 // "Pending Status" If the return value is ture
 func (c *Command) CheckPendingStatus(dbInstance *rds.DBInstance) bool {
 	for _, item := range dbInstance.DBParameterGroups {
@@ -379,8 +400,8 @@ func (c *Command) CheckPendingStatus(dbInstance *rds.DBInstance) bool {
 	return false
 }
 
+// DeleteDBResources is aws rds db instance or snap shot
 func (c *Command) DeleteDBResources(rdstypes interface{}) error {
-
 	switch rdstype := rdstypes.(type) {
 	case []*rds.DBSnapshot:
 		for i, item := range rdstype {
@@ -405,6 +426,7 @@ func (c *Command) DeleteDBResources(rdstypes interface{}) error {
 	return nil
 }
 
+// WaitForStatusAvailable is the 30 seconds intervals checked aws rds state
 // wait for status available
 func (c *Command) WaitForStatusAvailable(rdstypes interface{}) <-chan bool {
 	receiver := make(chan bool)
@@ -417,13 +439,13 @@ func (c *Command) WaitForStatusAvailable(rdstypes interface{}) <-chan bool {
 		for {
 			select {
 			case tick := <-ticker.C:
-				var rds_status string
+				var rdsStatus string
 
 				log.Debugf("tick: %s", tick)
 
 				switch rdstype := rdstypes.(type) {
 				case *rds.DBSnapshot:
-					db_snapshot, err := c.DescribeDBSnapshot(*rdstype.DBSnapshotIdentifier)
+					dbSnapshot, err := c.DescribeDBSnapshot(*rdstype.DBSnapshotIdentifier)
 
 					if err != nil {
 						receiver <- false
@@ -431,10 +453,10 @@ func (c *Command) WaitForStatusAvailable(rdstypes interface{}) <-chan bool {
 						ticker.Stop()
 					}
 
-					rds_status = *db_snapshot.Status
-					log.Infof("DB Snapshot Status: %s", rds_status)
+					rdsStatus = *dbSnapshot.Status
+					log.Infof("DB Snapshot Status: %s", rdsStatus)
 				case *rds.DBInstance:
-					db_instance, err := c.DescribeDBInstance(*rdstype.DBInstanceIdentifier)
+					dbInstance, err := c.DescribeDBInstance(*rdstype.DBInstanceIdentifier)
 
 					if err != nil {
 						receiver <- false
@@ -442,15 +464,15 @@ func (c *Command) WaitForStatusAvailable(rdstypes interface{}) <-chan bool {
 						ticker.Stop()
 					}
 
-					rds_status = *db_instance.DBInstanceStatus
-					log.Infof("DB Instance Status: %s", rds_status)
+					rdsStatus = *dbInstance.DBInstanceStatus
+					log.Infof("DB Instance Status: %s", rdsStatus)
 				default:
 					log.Errorf("%s", ErrRdsTypesNotFound.Error())
 				}
 
-				if rds_status == "available" {
+				if rdsStatus == "available" {
 					receiver <- true
-					log.Infof("Status: %s", rds_status)
+					log.Infof("Status: %s", rdsStatus)
 
 					ticker.Stop()
 				}
@@ -466,12 +488,14 @@ func (c *Command) WaitForStatusAvailable(rdstypes interface{}) <-chan bool {
 	return receiver
 }
 
+// ExecuteSQLArgs struct is Engine and Endpoint and Queries variable
 type ExecuteSQLArgs struct {
 	Engine   string // rds engine name
 	Endpoint *rds.Endpoint
 	Queries  []query.Query
 }
 
+// ExecuteSQL is execute SQL to aws rds
 func (c *Command) ExecuteSQL(args *ExecuteSQLArgs) ([]time.Duration, error) {
 	driver, dsn := c.getDbOpenValues(args)
 
@@ -491,8 +515,8 @@ func (c *Command) ExecuteSQL(args *ExecuteSQLArgs) ([]time.Duration, error) {
 	for _, value := range args.Queries {
 		log.Debugf("query value : %s", value)
 
-		s_time := time.Now()
-		log.Infof("query start time: %s", s_time)
+		sTime := time.Now()
+		log.Infof("query start time: %s", sTime)
 
 		result, err := db.Query(value.Sql)
 		if err != nil {
@@ -500,28 +524,28 @@ func (c *Command) ExecuteSQL(args *ExecuteSQLArgs) ([]time.Duration, error) {
 			return times, err
 		}
 
-		e_time := time.Now()
-		log.Infof("query end time: %s", e_time)
+		eTime := time.Now()
+		log.Infof("query end time: %s", eTime)
 
-		times = append(times, e_time.Sub(s_time))
+		times = append(times, eTime.Sub(sTime))
 
 		// output csv file
 		cols, _ := result.Columns()
 		if c.OutConfig.File && len(cols) > 0 {
-			file_name := value.Name + "-" + utils.GetFormatedTime() + ".csv"
-			out_path := utils.GetHomeDir()
+			fileName := value.Name + "-" + utils.GetFormatedTime() + ".csv"
+			outPath := utils.GetHomeDir()
 			if c.OutConfig.Root != "" {
-				out_path = c.OutConfig.Root
+				outPath = c.OutConfig.Root
 			}
 
-			out_state := writeCSVFile(
+			outState := writeCSVFile(
 				&writeCSVFileArgs{
 					Rows:     result,
-					FileName: file_name,
-					Path:     out_path,
+					FileName: fileName,
+					Path:     outPath,
 					Bom:      c.OutConfig.Bom,
 				})
-			log.Debugf("out_state:%+v", out_state)
+			log.Debugf("out_state:%+v", outState)
 		}
 
 		result.Close()
@@ -531,8 +555,8 @@ func (c *Command) ExecuteSQL(args *ExecuteSQLArgs) ([]time.Duration, error) {
 }
 
 func (c *Command) getDbOpenValues(args *ExecuteSQLArgs) (string, string) {
-	var driver_name string
-	var data_source_name string
+	var driverName string
+	var dataSourceName string
 
 	engine := strings.ToLower(args.Engine)
 	log.Debugf("aws engine name: %s", engine)
@@ -550,22 +574,22 @@ func (c *Command) getDbOpenValues(args *ExecuteSQLArgs) (string, string) {
 	// to-do: correspondence of mysql only
 	switch {
 	case strings.Contains(engine, "mysql"):
-		driver_name = "mysql"
-		data_source_name = fmt.Sprintf("%s:%s@tcp(%s:%d)/", c.RDSConfig.User, c.RDSConfig.Pass, *args.Endpoint.Address, *args.Endpoint.Port)
+		driverName = "mysql"
+		dataSourceName = fmt.Sprintf("%s:%s@tcp(%s:%d)/", c.RDSConfig.User, c.RDSConfig.Pass, *args.Endpoint.Address, *args.Endpoint.Port)
 	case strings.Contains(engine, "oracle"):
-		driver_name = "oracle"
+		driverName = "oracle"
 	case strings.Contains(engine, "sqlserver"):
-		driver_name = "sqlserver"
+		driverName = "sqlserver"
 	case strings.Contains(engine, "postgres"):
-		driver_name = "postgres"
+		driverName = "postgres"
 	default:
 		log.Errorf("failed to convert. no matching SQL driver: %s", engine)
 	}
 
-	log.Debugf("golang db driver name: %s", driver_name)
-	log.Debugf("golang db data source name: %s", data_source_name)
+	log.Debugf("golang db driver name: %s", driverName)
+	log.Debugf("golang db data source name: %s", dataSourceName)
 
-	return driver_name, data_source_name
+	return driverName, dataSourceName
 }
 
 func (c *Command) getARNString(rdstypes interface{}) string {
@@ -589,32 +613,32 @@ func (c *Command) getARNString(rdstypes interface{}) string {
 	return arn
 }
 
-const rt_name_text = "rt_name"
-const rt_time_text = "rt_time"
+const rtNameText = "rt_name"
+const rtTimeText = "rt_time"
 
 // use the tag for identification
 func getSpecifyTags() []*rds.Tag {
-	var tag_list []*rds.Tag
+	var tagList []*rds.Tag
 
 	// append name
-	key_name := rt_name_text
-	value_name := utils.GetFormatedAppName()
-	tag_name := &rds.Tag{
-		Key:   &key_name,
-		Value: &value_name,
+	keyName := rtNameText
+	valueName := utils.GetFormatedAppName()
+	tagName := &rds.Tag{
+		Key:   &keyName,
+		Value: &valueName,
 	}
-	tag_list = append(tag_list, tag_name)
+	tagList = append(tagList, tagName)
 
 	// append time
-	key_time := rt_time_text
-	value_time := utils.GetFormatedTime()
-	tag_time := &rds.Tag{
-		Key:   &key_time,
-		Value: &value_time,
+	keyTime := rtTimeText
+	valueTime := utils.GetFormatedTime()
+	tagTime := &rds.Tag{
+		Key:   &keyTime,
+		Value: &valueTime,
 	}
-	tag_list = append(tag_list, tag_time)
+	tagList = append(tagList, tagTime)
 
-	return tag_list
+	return tagList
 }
 
 type writeCSVFileArgs struct {
@@ -638,10 +662,10 @@ func writeCSVFile(args *writeCSVFileArgs) bool {
 		// When making the extension a txt, UTF8 can be used in Excel.
 		args.FileName = fmt.Sprintf("utf8-bom_%s", args.FileName)
 	}
-	out_path := path.Join(args.Path, args.FileName)
+	outPath := path.Join(args.Path, args.FileName)
 
 	// all user access OK
-	file, err := os.OpenFile(out_path, os.O_WRONLY|os.O_CREATE, 0777)
+	file, err := os.OpenFile(outPath, os.O_WRONLY|os.O_CREATE, 0777)
 	defer file.Close()
 
 	// set empty
@@ -667,7 +691,7 @@ func writeCSVFile(args *writeCSVFileArgs) bool {
 	// A temporary interface{} slice
 	dest := make([]interface{}, len(cols))
 	// Put pointers to each string in the interface slice
-	for i, _ := range rawResult {
+	for i := range rawResult {
 		dest[i] = &rawResult[i]
 	}
 
