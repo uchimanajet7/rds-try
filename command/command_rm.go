@@ -9,7 +9,7 @@ import (
 	"os/signal"
 	"strings"
 
-	"github.com/awslabs/aws-sdk-go/gen/rds"
+	"github.com/awslabs/aws-sdk-go/service/rds"
 
 	"github.com/uchimanajet7/rds-try/utils"
 )
@@ -87,7 +87,7 @@ func (c *RmCommand) runDetails(f *flag.FlagSet) error {
 	// blank new line
 	fmt.Println("")
 
-	var snap_list []rds.DBSnapshot
+	var snap_list []*rds.DBSnapshot
 	if c.OptSnap {
 		// to get list created in this tool
 		snap_list, err = c.DescribeDBSnapshotsByTags()

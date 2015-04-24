@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/awslabs/aws-sdk-go/gen/rds"
+	"github.com/awslabs/aws-sdk-go/service/rds"
 
 	"github.com/uchimanajet7/rds-try/query"
 	"github.com/uchimanajet7/rds-try/utils"

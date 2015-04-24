@@ -12,8 +12,7 @@ import (
 	"testing"
 
 	"github.com/awslabs/aws-sdk-go/aws"
-	"github.com/awslabs/aws-sdk-go/gen/endpoints"
-	"github.com/awslabs/aws-sdk-go/gen/rds"
+	"github.com/awslabs/aws-sdk-go/service/rds"
 	testdb "github.com/erikstmartin/go-testdb"
 
 	"github.com/uchimanajet7/rds-try/config"
@@ -39,13 +38,14 @@ func getTestClient(code int, body string) (*httptest.Server, *Command) {
 	httpClient := &http.Client{Transport: transport}
 
 	// Override endpoints
-	// see also
-	// endpoints - GoDoc
-	// https://godoc.org/github.com/awslabs/aws-sdk-go/gen/endpoints#AddOverride
 	test_region := "rds-try-test-1"
-	endpoints.AddOverride("rds", test_region, server.URL)
-	aws_creds := aws.Creds("awsAccesskey1", "awsSecretKey2", "")
-	aws_rds := rds.New(aws_creds, test_region, httpClient)
+	aws_conf := aws.DefaultConfig
+	aws_conf.Credentials = aws.Creds("awsAccesskey1", "awsSecretKey2", "")
+	aws_conf.Region = test_region
+	aws_conf.Endpoint = server.URL
+	aws_conf.HTTPClient = httpClient
+
+	aws_rds := rds.New(aws_conf)
 
 	test_name := utils.GetAppName() + "-test"
 	temp_dir, _ := ioutil.TempDir("", test_name)
@@ -80,8 +80,8 @@ func TestDescribeDBInstances(t *testing.T) {
 	ts, tc := getTestClient(200, sr_DescribeDBInstancesResponse)
 	defer ts.Close()
 
-	msg := &rds.DescribeDBInstancesMessage{}
-	ri, err := tc.describeDBInstances(msg)
+	input := &rds.DescribeDBInstancesInput{}
+	ri, err := tc.describeDBInstances(input)
 
 	if err != nil {
 		t.Errorf("[describeDBInstances] result error: %s", err.Error())
@@ -110,10 +110,11 @@ func TestCheckListTagsForResourceMessage(t *testing.T) {
 	ts, tc := getTestClient(200, sr_ListTagsForResourceResponse)
 	defer ts.Close()
 
+	db_id := "rds-try-test"
 	var ti rds.DBInstance
-	ti.DBInstanceIdentifier = aws.String("rds-try-test")
+	ti.DBInstanceIdentifier = &db_id
 
-	ri, err := tc.checkListTagsForResourceMessage(ti)
+	ri, err := tc.checkListTagsForResourceMessage(&ti)
 
 	if err != nil {
 		t.Errorf("[checkListTagsForResourceMessage] result error: %s", err.Error())
@@ -165,8 +166,8 @@ func TestDescribeDBSnapshots(t *testing.T) {
 	ts, tc := getTestClient(200, sr_DescribeDBSnapshotsResponse)
 	defer ts.Close()
 
-	msg := &rds.DescribeDBSnapshotsMessage{}
-	ri, err := tc.describeDBSnapshots(msg)
+	input := &rds.DescribeDBSnapshotsInput{}
+	ri, err := tc.describeDBSnapshots(input)
 
 	if err != nil {
 		t.Errorf("[describeDBSnapshots] result error: %s", err.Error())
@@ -311,8 +312,8 @@ func TestGetARNString(t *testing.T) {
 	defer ts.Close()
 
 	id := "rds-try-test-db-1"
-	di := rds.DBInstance{
-		DBInstanceIdentifier: aws.String(id),
+	di := &rds.DBInstance{
+		DBInstanceIdentifier: &id,
 	}
 
 	arn := tc.getARNString(di)
@@ -343,11 +344,12 @@ func TestGetSpecifyTags(t *testing.T) {
 
 func TestGetDbOpenValues(t *testing.T) {
 	eg := "mysql"
-	port := 3306
+	var port int64
+	port = 3306
 	addr := "rds-try-test-db.c6c2mntzugv0.us-west-2.rds.amazonaws.com"
 	ep := &rds.Endpoint{
-		Port:    aws.Integer(port),
-		Address: aws.String(addr),
+		Port:    &port,
+		Address: &addr,
 	}
 	q := []query.Query{
 		{

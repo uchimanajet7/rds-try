@@ -12,8 +12,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql" // required as SQL driver at the time of connection
 
-	"github.com/awslabs/aws-sdk-go/aws"
-	"github.com/awslabs/aws-sdk-go/gen/rds"
+	"github.com/awslabs/aws-sdk-go/service/rds"
 
 	"github.com/uchimanajet7/rds-try/config"
 	"github.com/uchimanajet7/rds-try/logger"
@@ -49,36 +48,36 @@ var (
 	ErrRdsARNsNotFound     = errors.New("RDS ARN Types is not found")
 )
 
-func (c *Command) describeDBInstances(message *rds.DescribeDBInstancesMessage) ([]rds.DBInstance, error) {
-	resp, err := c.RDSClient.DescribeDBInstances(message)
+func (c *Command) describeDBInstances(input *rds.DescribeDBInstancesInput) ([]*rds.DBInstance, error) {
+	output, err := c.RDSClient.DescribeDBInstances(input)
 
 	if err != nil {
 		log.Errorf("%s", err.Error())
 		return nil, err
 	}
 
-	return resp.DBInstances, err
+	return output.DBInstances, err
 }
 
 // all status in target, result return only one
 func (c *Command) DescribeDBInstance(dbIdentifier string) (*rds.DBInstance, error) {
 	// set DB ID
-	message := &rds.DescribeDBInstancesMessage{
-		DBInstanceIdentifier: aws.String(dbIdentifier),
+	input := &rds.DescribeDBInstancesInput{
+		DBInstanceIdentifier: &dbIdentifier,
 	}
-	resp, err := c.describeDBInstances(message)
+	output, err := c.describeDBInstances(input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	db_len := len(resp)
+	db_len := len(output)
 	if db_len < 1 {
 		log.Errorf("%s", ErrDBInstancetNotFound.Error())
 		return nil, ErrDBInstancetNotFound
 	}
 
-	return &resp[db_len-1], err
+	return output[db_len-1], err
 }
 
 func (c *Command) checkListTagsForResourceMessage(rdstypes interface{}) (bool, error) {
@@ -89,21 +88,28 @@ func (c *Command) checkListTagsForResourceMessage(rdstypes interface{}) (bool, e
 
 	// get tag list
 	state := false
-	tag_resp, err := c.RDSClient.ListTagsForResource(
-		&rds.ListTagsForResourceMessage{
-			ResourceName: aws.String(c.getARNString(rdstypes)),
+	arn := c.getARNString(rdstypes)
+	if arn == "" {
+		log.Errorf("%s", ErrRdsARNsNotFound.Error())
+		return state, ErrRdsARNsNotFound
+	}
+
+	tag_output, err := c.RDSClient.ListTagsForResource(
+		&rds.ListTagsForResourceInput{
+			ResourceName: &arn,
 		})
+
 	if err != nil {
 		log.Errorf("%s", err.Error())
 		return state, err
 	}
-	if len(tag_resp.TagList) <= 0 {
+	if len(tag_output.TagList) <= 0 {
 		return state, err
 	}
 
 	// check tag name and value
 	tag_cnt := 0
-	for _, tag := range tag_resp.TagList {
+	for _, tag := range tag_output.TagList {
 		switch *tag.Key {
 		case rt_name_text:
 			// if the rt_name tag exists, should the prefix value has become an application name
@@ -125,17 +131,17 @@ func (c *Command) checkListTagsForResourceMessage(rdstypes interface{}) (bool, e
 	return state, err
 }
 
-func (c *Command) DescribeDBInstancesByTags() ([]rds.DBInstance, error) {
-	message := &rds.DescribeDBInstancesMessage{}
+func (c *Command) DescribeDBInstancesByTags() ([]*rds.DBInstance, error) {
+	input := &rds.DescribeDBInstancesInput{}
 
-	resp, err := c.describeDBInstances(message)
+	output, err := c.describeDBInstances(input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	var dbInstances []rds.DBInstance
-	for _, instance := range resp {
+	var dbInstances []*rds.DBInstance
+	for _, instance := range output {
 		state, err := c.checkListTagsForResourceMessage(instance)
 		if err != nil {
 			return nil, err
@@ -150,41 +156,42 @@ func (c *Command) DescribeDBInstancesByTags() ([]rds.DBInstance, error) {
 }
 
 func (c *Command) ModifyDBInstance(dbIdentifier string, dbInstance *rds.DBInstance) (*rds.DBInstance, error) {
-	var vpc_ids []string
+	var vpc_ids []*string
 	for _, vpc_id := range dbInstance.VPCSecurityGroups {
-		vpc_ids = append(vpc_ids, *vpc_id.VPCSecurityGroupID)
+		vpc_ids = append(vpc_ids, vpc_id.VPCSecurityGroupID)
 	}
 
-	message := &rds.ModifyDBInstanceMessage{
-		DBInstanceIdentifier: aws.String(dbIdentifier),
-		DBParameterGroupName: aws.String(*dbInstance.DBParameterGroups[0].DBParameterGroupName),
+	apply := true
+	input := &rds.ModifyDBInstanceInput{
+		DBInstanceIdentifier: &dbIdentifier,
+		DBParameterGroupName: dbInstance.DBParameterGroups[0].DBParameterGroupName,
 		VPCSecurityGroupIDs:  vpc_ids,
-		ApplyImmediately:     aws.Boolean(true), // "ApplyImmediately" is always true
+		ApplyImmediately:     &apply, // "ApplyImmediately" is always true
 	}
 
-	resp, err := c.RDSClient.ModifyDBInstance(message)
+	output, err := c.RDSClient.ModifyDBInstance(input)
 
 	if err != nil {
 		log.Errorf("%s", err.Error())
 		return nil, err
 	}
 
-	return resp.DBInstance, err
+	return output.DBInstance, err
 }
 
 func (c *Command) RebootDBInstance(dbIdentifier string) (*rds.DBInstance, error) {
-	message := &rds.RebootDBInstanceMessage{
-		DBInstanceIdentifier: aws.String(dbIdentifier),
+	input := &rds.RebootDBInstanceInput{
+		DBInstanceIdentifier: &dbIdentifier,
 	}
 
-	resp, err := c.RDSClient.RebootDBInstance(message)
+	output, err := c.RDSClient.RebootDBInstance(input)
 
 	if err != nil {
 		log.Errorf("%s", err.Error())
 		return nil, err
 	}
 
-	return resp.DBInstance, err
+	return output.DBInstance, err
 }
 
 type RestoreDBInstanceFromDBSnapshotArgs struct {
@@ -196,37 +203,37 @@ type RestoreDBInstanceFromDBSnapshotArgs struct {
 }
 
 func (c *Command) RestoreDBInstanceFromDBSnapshot(args *RestoreDBInstanceFromDBSnapshotArgs) (*rds.DBInstance, error) {
-	message := &rds.RestoreDBInstanceFromDBSnapshotMessage{
-		DBInstanceClass:      aws.String(args.DBInstanceClass),
-		DBInstanceIdentifier: aws.String(args.DBIdentifier),
-		MultiAZ:              aws.Boolean(args.MultiAZ),
+	input := &rds.RestoreDBInstanceFromDBSnapshotInput{
+		DBInstanceClass:      &args.DBInstanceClass,
+		DBInstanceIdentifier: &args.DBIdentifier,
+		MultiAZ:              &args.MultiAZ,
 		DBSnapshotIdentifier: args.Snapshot.DBSnapshotIdentifier,
 		DBSubnetGroupName:    args.Instance.DBSubnetGroup.DBSubnetGroupName,
 		StorageType:          args.Instance.StorageType,
 		Tags:                 getSpecifyTags(), // It must always be set to not forget
 	}
 
-	resp, err := c.RDSClient.RestoreDBInstanceFromDBSnapshot(message)
+	output, err := c.RDSClient.RestoreDBInstanceFromDBSnapshot(input)
 
 	if err != nil {
 		log.Errorf("%s", err.Error())
 		return nil, err
 	}
 
-	return resp.DBInstance, err
+	return output.DBInstance, err
 }
 
-func (c *Command) DescribeDBSnapshotsByTags() ([]rds.DBSnapshot, error) {
-	message := &rds.DescribeDBSnapshotsMessage{}
+func (c *Command) DescribeDBSnapshotsByTags() ([]*rds.DBSnapshot, error) {
+	input := &rds.DescribeDBSnapshotsInput{}
 
-	resp, err := c.describeDBSnapshots(message)
+	output, err := c.describeDBSnapshots(input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	var dbSnapshots []rds.DBSnapshot
-	for _, snapshot := range resp {
+	var dbSnapshots []*rds.DBSnapshot
+	for _, snapshot := range output {
 		state, err := c.checkListTagsForResourceMessage(snapshot)
 		if err != nil {
 			return nil, err
@@ -240,32 +247,32 @@ func (c *Command) DescribeDBSnapshotsByTags() ([]rds.DBSnapshot, error) {
 	return dbSnapshots, err
 }
 
-func (c *Command) describeDBSnapshots(message *rds.DescribeDBSnapshotsMessage) ([]rds.DBSnapshot, error) {
-	resp, err := c.RDSClient.DescribeDBSnapshots(message)
+func (c *Command) describeDBSnapshots(input *rds.DescribeDBSnapshotsInput) ([]*rds.DBSnapshot, error) {
+	output, err := c.RDSClient.DescribeDBSnapshots(input)
 
 	if err != nil {
 		log.Errorf("%s", err.Error())
 		return nil, err
 	}
 
-	return resp.DBSnapshots, err
+	return output.DBSnapshots, err
 }
 
 // the target only "available"
 func (c *Command) DescribeLatestDBSnapshot(dbIdentifier string) (*rds.DBSnapshot, error) {
-	message := &rds.DescribeDBSnapshotsMessage{
-		DBInstanceIdentifier: aws.String(dbIdentifier),
+	input := &rds.DescribeDBSnapshotsInput{
+		DBInstanceIdentifier: &dbIdentifier,
 	}
 
-	resp, err := c.describeDBSnapshots(message)
+	output, err := c.describeDBSnapshots(input)
 
 	if err != nil {
 		return nil, err
 	}
 
 	// want to filter by status "available"
-	var dbSnapshots []rds.DBSnapshot
-	for _, snapshot := range resp {
+	var dbSnapshots []*rds.DBSnapshot
+	for _, snapshot := range output {
 		if *snapshot.Status != "available" {
 			log.Debugf("DB Snapshot Status : %s", *snapshot.Status)
 			continue
@@ -280,77 +287,79 @@ func (c *Command) DescribeLatestDBSnapshot(dbIdentifier string) (*rds.DBSnapshot
 		return nil, ErrSnapshotNotFound
 	}
 
-	return &dbSnapshots[db_len-1], err
+	return dbSnapshots[db_len-1], err
 }
 
 // all status in target, result return only one
 func (c *Command) DescribeDBSnapshot(snapshotIdentifier string) (*rds.DBSnapshot, error) {
-	message := &rds.DescribeDBSnapshotsMessage{
-		DBSnapshotIdentifier: aws.String(snapshotIdentifier),
+	input := &rds.DescribeDBSnapshotsInput{
+		DBSnapshotIdentifier: &snapshotIdentifier,
 	}
 
-	resp, err := c.describeDBSnapshots(message)
+	output, err := c.describeDBSnapshots(input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	db_len := len(resp)
+	db_len := len(output)
 	if db_len < 1 {
 		log.Errorf("%s", ErrSnapshotNotFound.Error())
 		return nil, ErrSnapshotNotFound
 	}
 
-	return &resp[db_len-1], err
+	return output[db_len-1], err
 }
 
 // delete DB instance and skip create snapshot
 func (c *Command) DeleteDBInstance(dbIdentifier string) (*rds.DBInstance, error) {
-	message := &rds.DeleteDBInstanceMessage{
-		DBInstanceIdentifier: aws.String(dbIdentifier),
-		SkipFinalSnapshot:    aws.Boolean(true), // "SkipFinalSnapshot" is always true
+	skip := true
+	input := &rds.DeleteDBInstanceInput{
+		DBInstanceIdentifier: &dbIdentifier,
+		SkipFinalSnapshot:    &skip, // "SkipFinalSnapshot" is always true
 	}
 
-	resp, err := c.RDSClient.DeleteDBInstance(message)
+	output, err := c.RDSClient.DeleteDBInstance(input)
 
 	if err != nil {
 		log.Errorf("%s", err.Error())
 		return nil, err
 	}
 
-	return resp.DBInstance, err
+	return output.DBInstance, err
 }
 
 func (c *Command) CreateDBSnapshot(dbIdentifier string) (*rds.DBSnapshot, error) {
-	message := &rds.CreateDBSnapshotMessage{
-		DBInstanceIdentifier: aws.String(dbIdentifier),
-		DBSnapshotIdentifier: aws.String(utils.GetFormatedDBDisplayName(dbIdentifier)),
+	snapshotID := utils.GetFormatedDBDisplayName(dbIdentifier)
+	input := &rds.CreateDBSnapshotInput{
+		DBInstanceIdentifier: &dbIdentifier,
+		DBSnapshotIdentifier: &snapshotID,
 		Tags:                 getSpecifyTags(), // It must always be set to not forget
 	}
 
-	resp, err := c.RDSClient.CreateDBSnapshot(message)
+	output, err := c.RDSClient.CreateDBSnapshot(input)
 
 	if err != nil {
 		log.Errorf("%s", err.Error())
 		return nil, err
 	}
 
-	return resp.DBSnapshot, err
+	return output.DBSnapshot, err
 }
 
 func (c *Command) DeleteDBSnapshot(snapshotIdentifier string) (*rds.DBSnapshot, error) {
-	message := &rds.DeleteDBSnapshotMessage{
-		DBSnapshotIdentifier: aws.String(snapshotIdentifier),
+	input := &rds.DeleteDBSnapshotInput{
+		DBSnapshotIdentifier: &snapshotIdentifier,
 	}
 
-	resp, err := c.RDSClient.DeleteDBSnapshot(message)
+	output, err := c.RDSClient.DeleteDBSnapshot(input)
 
 	if err != nil {
 		log.Errorf("%s", err.Error())
 		return nil, err
 	}
 
-	return resp.DBSnapshot, err
+	return output.DBSnapshot, err
 }
 
 // "Pending Status" If the return value is ture
@@ -373,7 +382,7 @@ func (c *Command) CheckPendingStatus(dbInstance *rds.DBInstance) bool {
 func (c *Command) DeleteDBResources(rdstypes interface{}) error {
 
 	switch rdstype := rdstypes.(type) {
-	case []rds.DBSnapshot:
+	case []*rds.DBSnapshot:
 		for i, item := range rdstype {
 			resp, err := c.DeleteDBSnapshot(*item.DBSnapshotIdentifier)
 			if err != nil {
@@ -381,7 +390,7 @@ func (c *Command) DeleteDBResources(rdstypes interface{}) error {
 			}
 			log.Infof("[% d] deleted DB Snapshot: %s", i+1, *resp.DBSnapshotIdentifier)
 		}
-	case []rds.DBInstance:
+	case []*rds.DBInstance:
 		for i, item := range rdstype {
 			resp, err := c.DeleteDBInstance(*item.DBInstanceIdentifier)
 			if err != nil {
@@ -567,9 +576,9 @@ func (c *Command) getARNString(rdstypes interface{}) string {
 
 	var arn string
 	switch rdstype := rdstypes.(type) {
-	case rds.DBSnapshot:
+	case *rds.DBSnapshot:
 		arn = c.ARNPrefix + "snapshot:" + *rdstype.DBSnapshotIdentifier
-	case rds.DBInstance:
+	case *rds.DBInstance:
 		arn = c.ARNPrefix + "db:" + *rdstype.DBInstanceIdentifier
 	default:
 		log.Errorf("%s", ErrRdsARNsNotFound.Error())
@@ -584,23 +593,26 @@ const rt_name_text = "rt_name"
 const rt_time_text = "rt_time"
 
 // use the tag for identification
-func getSpecifyTags() []rds.Tag {
-	var tag_list []rds.Tag
-	var tag rds.Tag
+func getSpecifyTags() []*rds.Tag {
+	var tag_list []*rds.Tag
 
 	// append name
-	tag = rds.Tag{
-		Key:   aws.String(rt_name_text),
-		Value: aws.String(utils.GetFormatedAppName()),
+	key_name := rt_name_text
+	value_name := utils.GetFormatedAppName()
+	tag_name := &rds.Tag{
+		Key:   &key_name,
+		Value: &value_name,
 	}
-	tag_list = append(tag_list, tag)
+	tag_list = append(tag_list, tag_name)
 
 	// append time
-	tag = rds.Tag{
-		Key:   aws.String(rt_time_text),
-		Value: aws.String(utils.GetFormatedTime()),
+	key_time := rt_time_text
+	value_time := utils.GetFormatedTime()
+	tag_time := &rds.Tag{
+		Key:   &key_time,
+		Value: &value_time,
 	}
-	tag_list = append(tag_list, tag)
+	tag_list = append(tag_list, tag_time)
 
 	return tag_list
 }

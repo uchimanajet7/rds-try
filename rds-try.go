@@ -9,8 +9,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/awslabs/aws-sdk-go/gen/iam"
-	"github.com/awslabs/aws-sdk-go/gen/rds"
+	"github.com/awslabs/aws-sdk-go/aws"
+	"github.com/awslabs/aws-sdk-go/service/iam"
+	"github.com/awslabs/aws-sdk-go/service/rds"
 
 	"github.com/uchimanajet7/rds-try/command"
 	"github.com/uchimanajet7/rds-try/config"
@@ -178,11 +179,15 @@ func setLogOptions(conf *config.Config) (*os.File, int) {
 
 func getCommandStruct(conf *config.Config) (*command.Command, int) {
 	// aws
-	aws_creds := conf.GetAWSCreds()
-	aws_iam := iam.New(aws_creds, conf.Rds[name_flag].Region, nil)
+	aws_conf := aws.DefaultConfig
+	aws_conf.Credentials = conf.GetAWSCreds()
+	aws_conf.Region = conf.Rds[name_flag].Region
+
+	// new iam
+	aws_iam := iam.New(aws_conf)
 
 	// IAM info
-	iam_users, err := aws_iam.ListUsers(&iam.ListUsersRequest{})
+	iam_users, err := aws_iam.ListUsers(&iam.ListUsersInput{})
 	if err != nil {
 		log.Errorf("%s", err.Error())
 		return nil, 1
@@ -202,7 +207,8 @@ func getCommandStruct(conf *config.Config) (*command.Command, int) {
 	iam_split = strings.Split(iam_account, ":")
 	iam_account = iam_split[0]
 
-	aws_rds := rds.New(aws_creds, conf.Rds[name_flag].Region, nil)
+	// new rds
+	aws_rds := rds.New(aws_conf)
 
 	cmd_st := &command.Command{
 		OutConfig: conf.Out,
