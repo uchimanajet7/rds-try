@@ -80,7 +80,7 @@ func (c *Command) DescribeDBInstance(dbIdentifier string) (*rds.DBInstance, erro
 	return output[db_len-1], err
 }
 
-func (c *Command) checkListTagsForResourceMessage(rdstypes interface{}) (bool, error) {
+func (c *Command) checkListTagsForResource(rdstypes interface{}) (bool, error) {
 	// want to filter by tag name and value
 	// see also
 	// ListTagsForResource - Amazon Relational Database Service
@@ -142,7 +142,7 @@ func (c *Command) DescribeDBInstancesByTags() ([]*rds.DBInstance, error) {
 
 	var dbInstances []*rds.DBInstance
 	for _, instance := range output {
-		state, err := c.checkListTagsForResourceMessage(instance)
+		state, err := c.checkListTagsForResource(instance)
 		if err != nil {
 			return nil, err
 		}
@@ -234,7 +234,7 @@ func (c *Command) DescribeDBSnapshotsByTags() ([]*rds.DBSnapshot, error) {
 
 	var dbSnapshots []*rds.DBSnapshot
 	for _, snapshot := range output {
-		state, err := c.checkListTagsForResourceMessage(snapshot)
+		state, err := c.checkListTagsForResource(snapshot)
 		if err != nil {
 			return nil, err
 		}

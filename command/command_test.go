@@ -114,10 +114,10 @@ func TestCheckListTagsForResourceMessage(t *testing.T) {
 	var ti rds.DBInstance
 	ti.DBInstanceIdentifier = &db_id
 
-	ri, err := tc.checkListTagsForResourceMessage(&ti)
+	ri, err := tc.checkListTagsForResource(&ti)
 
 	if err != nil {
-		t.Errorf("[checkListTagsForResourceMessage] result error: %s", err.Error())
+		t.Errorf("[checkListTagsForResource] result error: %s", err.Error())
 	}
 	if !ri {
 		t.Error("tags count not match")
