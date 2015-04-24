@@ -12,6 +12,7 @@ before_install:
   - go get golang.org/x/tools/cmd/cover
   - go get github.com/golang/lint
 script:
+  - find / -name golint
   - $HOME/gopath/bin/golint ./... 
   # cannot use test profile flag with multiple packages error
   #- go test -v -covermode=count -coverprofile=coverage.out ./...
