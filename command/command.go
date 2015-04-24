@@ -113,7 +113,7 @@ func (c *Command) checkListTagsForResource(rdstypes interface{}) (bool, error) {
 		switch *tag.Key {
 		case rt_name_text:
 			// if the rt_name tag exists, should the prefix value has become an application name
-			if strings.HasPrefix(*tag.Value, utils.GetFormatedAppName()) {
+			if strings.HasPrefix(*tag.Value, utils.GetPrefix()) {
 				tag_cnt++
 			}
 		case rt_time_text:
