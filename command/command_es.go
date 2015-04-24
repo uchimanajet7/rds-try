@@ -173,8 +173,15 @@ func (c *EsCommand) runDetails(f *flag.FlagSet) error {
 	}
 
 	// setting check
-	if c.CheckPendingStatus(rest_db) {
-		log.Infof("restart second time! because change has not been applied")
+	var count = 1
+	for c.CheckPendingStatus(rest_db) {
+		// max count
+		if count > 6 {
+			return ErrDBInstancetTimeOut
+		}
+
+		count++
+		log.Infof("restart %d times! because change has not been applied", count)
 
 		// once again reboot
 		rest_db, err = c.RebootDBInstance(rest_name)
@@ -186,6 +193,12 @@ func (c *EsCommand) runDetails(f *flag.FlagSet) error {
 		wait_chan = c.WaitForStatusAvailable(rest_db)
 		if !<-wait_chan {
 			return ErrDBInstancetTimeOut
+		}
+
+		// get db info
+		rest_db, err = c.DescribeDBInstance(rest_name)
+		if err != nil {
+			return err
 		}
 	}
 
