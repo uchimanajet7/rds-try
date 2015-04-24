@@ -12,7 +12,8 @@ import (
 )
 
 const app_name = "rds-try"
-const app_version = "v0.0.1"
+// see also "_tag" file
+const app_version = "v0.0.2"
 
 var log = logger.GetLogger("utils")
 
