@@ -10,6 +10,7 @@ before_install:
   - go get github.com/axw/gocov/gocov
   - go get github.com/mattn/goveralls
   - go get golang.org/x/tools/cmd/cover
+  - go get github.com/golang/lint
 script:
   # cannot use test profile flag with multiple packages error
   #- go test -v -covermode=count -coverprofile=coverage.out ./...
@@ -26,6 +27,7 @@ script:
   - ls | grep cover.out | xargs cat | grep -v "mode:" | sort -r >> coverage.out
   - go tool cover -func coverage.out
   - goveralls -coverprofile=coverage.out -service travis-ci -repotoken $COVERALLS_TOKEN
+  - golint ./...
 after_success:
   - gox -output "_pkg/{{.Dir}}_{{.OS}}_{{.Arch}}/{{.Dir}}" -os="linux windows darwin"
   - find _pkg -maxdepth 1 -mindepth 1 -type d -exec cp README.* {}/ \;
