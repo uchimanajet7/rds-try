@@ -5,7 +5,7 @@ import (
 	"path"
 
 	"github.com/BurntSushi/toml"
-	"github.com/awslabs/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 
 	"github.com/uchimanajet7/rds-try/logger"
 	"github.com/uchimanajet7/rds-try/utils"
@@ -79,16 +79,39 @@ func GetDefaultPath() string {
 	return path.Join(utils.GetHomeDir(), configFile)
 }
 
-// GetAWSCreds is the call aws-sdk-go "DetectCreds"
+// GetAWSCreds returns the appropriate value as the need arises.
 //
 // evaluated in the following order
 // 1. input variable
 // 2. Environment variable
-// 3. /.aws/credentials
-// 4. IAM Role
-// see also
-// aws - GoDoc
-// http://godoc.org/github.com/awslabs/aws-sdk-go/aws#DetectCreds
-func (c *Config) GetAWSCreds() aws.CredentialsProvider {
-	return aws.DetectCreds(c.Aws.Accesskey, c.Aws.SecretKey, "")
+// 3. IAM Role
+//
+// "/.aws/credentials" necessary item increased about that, so it isn't used.
+func (c *Config) GetAWSCreds() (*credentials.Credentials, error) {
+	var creds *credentials.Credentials
+	var err error
+
+	err = nil
+	// 1. input variable used
+	if c.Aws.Accesskey != "" && c.Aws.SecretKey != "" {
+		creds = credentials.NewStaticCredentials(c.Aws.Accesskey, c.Aws.SecretKey, "")
+		creds.Expire()
+		_, err = creds.Get()
+	}
+
+	if err != nil {
+		// 2. Environment variable used
+		creds = credentials.NewEnvCredentials()
+		creds.Expire()
+		_, err = creds.Get()
+
+		if err != nil {
+			// 3. IAM Role used
+			creds = credentials.NewCredentials(&credentials.EC2RoleProvider{})
+			creds.Expire()
+			_, err = creds.Get()
+		}
+	}
+
+	return creds, err
 }

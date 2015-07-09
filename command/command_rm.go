@@ -9,7 +9,7 @@ import (
 	"os/signal"
 	"strings"
 
-	"github.com/awslabs/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go/service/rds"
 
 	"github.com/uchimanajet7/rds-try/utils"
 )

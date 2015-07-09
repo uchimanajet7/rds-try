@@ -11,8 +11,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/awslabs/aws-sdk-go/aws"
-	"github.com/awslabs/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/service/rds"
 	testdb "github.com/erikstmartin/go-testdb"
 
 	"github.com/uchimanajet7/rds-try/config"
@@ -40,7 +41,7 @@ func getTestClient(code int, body string) (*httptest.Server, *Command) {
 	// Override endpoints
 	testRegion := "rds-try-test-1"
 	awsConf := aws.DefaultConfig
-	awsConf.Credentials = aws.Creds("awsAccesskey1", "awsSecretKey2", "")
+	awsConf.Credentials = credentials.NewStaticCredentials("awsAccesskey1", "awsSecretKey2", "")
 	awsConf.Region = testRegion
 	awsConf.Endpoint = server.URL
 	awsConf.HTTPClient = httpClient

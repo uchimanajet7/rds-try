@@ -12,7 +12,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql" // required as SQL driver at the time of connection
 
-	"github.com/awslabs/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go/service/rds"
 
 	"github.com/uchimanajet7/rds-try/config"
 	"github.com/uchimanajet7/rds-try/logger"

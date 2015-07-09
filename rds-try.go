@@ -9,9 +9,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/awslabs/aws-sdk-go/aws"
-	"github.com/awslabs/aws-sdk-go/service/iam"
-	"github.com/awslabs/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go/service/rds"
 
 	"github.com/uchimanajet7/rds-try/command"
 	"github.com/uchimanajet7/rds-try/config"
@@ -178,9 +178,16 @@ func setLogOptions(conf *config.Config) (*os.File, int) {
 }
 
 func getCommandStruct(conf *config.Config) (*command.Command, int) {
-	// aws
+	// aws config init
 	awsConfig := aws.DefaultConfig
-	awsConfig.Credentials = conf.GetAWSCreds()
+
+	// aws Credentials
+	creds, err := conf.GetAWSCreds()
+	if err != nil {
+		log.Errorf("%s", err.Error())
+		return nil, 1
+	}
+	awsConfig.Credentials = creds
 	awsConfig.Region = conf.Rds[nameFlag].Region
 
 	// new iam
