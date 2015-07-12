@@ -12,7 +12,7 @@ import (
 )
 
 const appName = "rds-try"
-const appVersion = "v0.0.1"
+const appVersion = "v0.0.3"
 
 var log = logger.GetLogger("utils")
 
