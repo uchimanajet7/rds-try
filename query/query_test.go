@@ -19,7 +19,7 @@ func TestLoadQuery(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		query := Query{
 			Name: fmt.Sprintf("name_%d", i+1),
-			Sql:  fmt.Sprintf("sql_%d", i+1),
+			SQL:  fmt.Sprintf("sql_%d", i+1),
 		}
 		queries.Query = append(queries.Query, query)
 	}

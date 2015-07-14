@@ -18,7 +18,7 @@ type Queries struct {
 // Query struct have Name and Sql variable
 type Query struct {
 	Name string `toml:"name"`
-	Sql  string `toml:"sql"`
+	SQL  string `toml:"sql"`
 }
 
 const queryFile = "rds-try.query"

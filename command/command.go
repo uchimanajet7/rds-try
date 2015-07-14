@@ -518,7 +518,7 @@ func (c *Command) ExecuteSQL(args *ExecuteSQLArgs) ([]time.Duration, error) {
 		sTime := time.Now()
 		log.Infof("query start time: %s", sTime)
 
-		result, err := db.Query(value.Sql)
+		result, err := db.Query(value.SQL)
 		if err != nil {
 			log.Errorf("%s", err.Error())
 			return times, err

@@ -355,11 +355,11 @@ func TestGetDbOpenValues(t *testing.T) {
 	q := []query.Query{
 		{
 			Name: "q1",
-			Sql:  "select * from account_id",
+			SQL:  "select * from account_id",
 		},
 		{
 			Name: "q2",
-			Sql:  "select count(*) from account_id",
+			SQL:  "select count(*) from account_id",
 		},
 	}
 	args := &ExecuteSQLArgs{
