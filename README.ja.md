@@ -4,7 +4,8 @@ rds-try
 [![Build Status](https://travis-ci.org/uchimanajet7/rds-try.svg?branch=master)](https://travis-ci.org/uchimanajet7/rds-try)
 
 rds-tryは [Amazon RDS](
-http://aws.amazon.com/jp/rds/) に対して以下の操作を行えます
+http://aws.amazon.com/jp/rds/) に対して以下の操作を行えます<br>
+また実行には [AWS SDK for Go](http://aws.amazon.com/jp/sdk-for-go/) を利用しています
 
 ##### for MySQL
 - インスタンス操作

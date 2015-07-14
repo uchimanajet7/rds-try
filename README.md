@@ -3,7 +3,7 @@ rds-try
 [![Build Status](https://travis-ci.org/uchimanajet7/rds-try.svg?branch=master)](https://travis-ci.org/uchimanajet7/rds-try)
 
 rds-try can perform the following operations against  [Amazon RDS](
-http://aws.amazon.com/jp/rds/)
+http://aws.amazon.com/jp/rds/) and used [AWS SDK for Go](http://aws.amazon.com/jp/sdk-for-go/)
 
 ##### for MySQL
 - Instance operation
