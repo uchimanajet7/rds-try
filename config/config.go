@@ -6,6 +6,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds"
 
 	"github.com/uchimanajet7/rds-try/logger"
 	"github.com/uchimanajet7/rds-try/utils"
@@ -107,7 +108,7 @@ func (c *Config) GetAWSCreds() (*credentials.Credentials, error) {
 
 		if err != nil {
 			// 3. IAM Role used
-			creds = credentials.NewCredentials(&credentials.EC2RoleProvider{})
+			creds = credentials.NewCredentials(&ec2rolecreds.EC2RoleProvider{})
 			creds.Expire()
 			_, err = creds.Get()
 		}

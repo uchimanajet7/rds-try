@@ -178,17 +178,16 @@ func setLogOptions(conf *config.Config) (*os.File, int) {
 }
 
 func getCommandStruct(conf *config.Config) (*command.Command, int) {
-	// aws config init
-	awsConfig := aws.DefaultConfig
-
 	// aws Credentials
 	creds, err := conf.GetAWSCreds()
 	if err != nil {
 		log.Errorf("%s", err.Error())
 		return nil, 1
 	}
-	awsConfig.Credentials = creds
-	awsConfig.Region = conf.Rds[nameFlag].Region
+	// aws config init
+	awsConfig := aws.NewConfig()
+	awsConfig = awsConfig.WithCredentials(creds)
+	awsConfig = awsConfig.WithRegion(conf.Rds[nameFlag].Region)
 
 	// new iam
 	awsIam := iam.New(awsConfig)
