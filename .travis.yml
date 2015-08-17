@@ -27,7 +27,7 @@ script:
   #- echo "mode: count" > coverage.out
   - ls | grep cover.out | xargs cat | grep -v "mode:" | sort -r >> coverage.out
   - go tool cover -func coverage.out
-  - goveralls -coverprofile=coverage.out -service travis-ci -repotoken $COVERALLS_TOKEN
+  - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken=$COVERALLS_TOKEN
 after_success:
   - gox -output "_pkg/{{.Dir}}_{{.OS}}_{{.Arch}}/{{.Dir}}" -os="linux windows darwin"
   - find _pkg -maxdepth 1 -mindepth 1 -type d -exec cp README.* {}/ \;

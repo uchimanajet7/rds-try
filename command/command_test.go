@@ -40,11 +40,11 @@ func getTestClient(code int, body string) (*httptest.Server, *Command) {
 
 	// Override endpoints
 	testRegion := "rds-try-test-1"
-	awsConf := aws.DefaultConfig
-	awsConf.Credentials = credentials.NewStaticCredentials("awsAccesskey1", "awsSecretKey2", "")
-	awsConf.Region = testRegion
-	awsConf.Endpoint = server.URL
-	awsConf.HTTPClient = httpClient
+	awsConf := aws.NewConfig()
+	awsConf = awsConf.WithCredentials(credentials.NewStaticCredentials("awsAccesskey1", "awsSecretKey2", ""))
+	awsConf = awsConf.WithRegion(testRegion)
+	awsConf = awsConf.WithEndpoint(server.URL)
+	awsConf = awsConf.WithHTTPClient(httpClient)
 
 	awsRds := rds.New(awsConf)
 
