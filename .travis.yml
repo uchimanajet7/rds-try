@@ -5,7 +5,8 @@ env:
   - "PATH=/home/travis/gopath/bin:$PATH"
 before_install:
   - go get github.com/mitchellh/gox
-  - gox -build-toolchain -os="linux windows darwin"
+  # -build-toolchain is no longer required for Go 1.5 or later.
+  # - gox -build-toolchain -os="linux windows darwin"
   - go get github.com/tcnksm/ghr
   - go get github.com/axw/gocov/gocov
   - go get github.com/mattn/goveralls
