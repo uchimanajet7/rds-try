@@ -208,7 +208,7 @@ func getCommandStruct(conf *config.Config) (*command.Command, int) {
 	// see also
 	// Tagging Amazon RDS Resources - Amazon Relational Database Service
 	// http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Tagging.html#USER_Tagging.ARN
-	iamSplit := strings.SplitAfter(*iamUsers.Users[0].ARN, "::")
+	iamSplit := strings.SplitAfter(*iamUsers.Users[0].Arn, "::")
 	iamAccount := iamSplit[len(iamSplit)-1]
 	iamSplit = strings.Split(iamAccount, ":")
 	iamAccount = iamSplit[0]

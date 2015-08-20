@@ -168,15 +168,15 @@ func (c *Command) DescribeDBInstancesByTags() ([]*rds.DBInstance, error) {
 // ModifyDBInstance is modify aws rds db instance setting
 func (c *Command) ModifyDBInstance(dbIdentifier string, dbInstance *rds.DBInstance) (*rds.DBInstance, error) {
 	var vpcIDs []*string
-	for _, vpcID := range dbInstance.VPCSecurityGroups {
-		vpcIDs = append(vpcIDs, vpcID.VPCSecurityGroupID)
+	for _, vpcID := range dbInstance.VpcSecurityGroups {
+		vpcIDs = append(vpcIDs, vpcID.VpcSecurityGroupId)
 	}
 
 	apply := true
 	input := &rds.ModifyDBInstanceInput{
 		DBInstanceIdentifier: &dbIdentifier,
 		DBParameterGroupName: dbInstance.DBParameterGroups[0].DBParameterGroupName,
-		VPCSecurityGroupIDs:  vpcIDs,
+		VpcSecurityGroupIds:  vpcIDs,
 		ApplyImmediately:     &apply, // "ApplyImmediately" is always true
 	}
 
@@ -391,7 +391,7 @@ func (c *Command) CheckPendingStatus(dbInstance *rds.DBInstance) bool {
 		}
 	}
 
-	for _, item := range dbInstance.VPCSecurityGroups {
+	for _, item := range dbInstance.VpcSecurityGroups {
 		if *item.Status != "active" {
 			return true
 		}
